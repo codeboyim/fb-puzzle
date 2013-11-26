@@ -1,0 +1,168 @@
+<!-- template.html -->
+<html>
+
+<head>
+    <title>Hello React</title>
+    
+    <script src="/scripts/console-polyfill.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/es5-shim/2.1.0/es5-shim.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/es5-shim/2.1.0/es5-sham.min.js"></script>
+   <!-- <script src="http://fb.me/react-0.5.1.js"></script>
+    <script src="http://fb.me/JSXTransformer-0.5.1.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js"></script>    -->
+    <script src="//codeorigin.jquery.com/jquery-1.10.2.js"></script>
+    <style>
+    .event {
+        float:left;
+        position:relative;
+        top:0;
+        background-color:blue;
+        overflow:hidden;
+        width:100%;
+    }
+    .col-2 {
+        width:50%;
+    }
+    .col-3 {
+        width:33%;
+    }
+    .col-4 {
+        width:25%;
+    }
+    </style>
+</head>
+
+<body>
+
+    <div id="container" style="width:600px; padding: 0 10px; height:700px;position:relative;background-color:#ccc;">
+
+    </div>
+
+    <script>
+    var events = [{
+        start: 5,
+        end: 24
+    }, {
+        start: 10,
+        end: 30
+    }, {
+        start: 30,
+        end: 50
+    }],
+        container = $("#container"),
+        groups = [],
+        eventTemplate = '<div class="event"></div>';
+
+    $.each(events, function(i, event) {
+        var g;
+
+        if (i == 0 || event.start >= groups[groups.length - 1].maxEnd) {
+            groups.push({
+                events: [i],
+                maxEnd: event.end
+            })
+        } else {
+            g = groups[groups.length - 1];
+            g.events.push(i)
+
+            if (event.end > g.maxEnd) {
+                g.maxEnd = event.end;
+            }
+        }
+    });
+
+    $.each(groups, function(i, group) {
+        var groupLen = group.events.length,
+            event;
+        console.log(groupLen);
+
+        if (groupLen > 1) {
+
+            $.each(group.events, function(j, evtIdx) {
+                var eventElm = $(eventTemplate);
+                event = events[evtIdx];
+
+                eventElm.appendTo(container)
+                    .css('width', Math.round(100 / groupLen) + '%')
+                    .css('height', event.end - event.start)
+                    .css('top', event.start - eventElm.get(0).offsetTop);
+            })
+
+        } else {
+            var eventElm = $(eventTemplate);
+            event = events[group.events[0]];
+
+            eventElm.appendTo(container)
+                .css('top', event.start - eventElm.position().top)
+                .css('height', event.end - event.start);
+
+            console.log({
+                id: group.events[0],
+                start: event.start,
+                offsetTopAfter: eventElm.get(0).offsetTop
+            });
+        }
+    })
+    </script>
+
+    <div id="content"></div>
+    <script type="text/jsx">
+    // /**
+    //  * @jsx React.DOM
+    //  */
+
+    // var CommentBox = React.createClass({
+    //         render: function() {
+    //             return ( < div className = "commentBox" > < h1 > Comments < /h1>
+    //         <CommentList data={this.props.data} / > < CommentForm / > < /div>
+    //     );
+    //   }
+    // });
+
+    // var CommentList = React.createClass({
+    //   render:function(){
+    //     var commentNodes = this.props.data.map(function(comment){
+    //       return <Comment author={comment.author}>{comment.text}</Comment >
+    //             });
+    //         return ( < div className = "commentList" > {
+    //             commentNodes
+    //         } < /div>
+    //     );
+    //   }
+    // });
+
+    // var CommentForm = React.createClass({
+    //   render: function(){
+    //     return (
+    //       <div className="commentForm">
+    //         Hello, world! I am a CommentForm.
+    //       </div > );
+    //     }
+    // });
+
+    // var converter = new Showdown.converter();
+    // var Comment = React.createClass({
+    //         render: function() {
+    //             var rawMarkup = converter.makeHtml(this.props.children.toString());
+    //             return ( < div className = "comment" > < h2 className = "commentAuthor" > {
+    //                     this.props.author
+    //                 } < /h2>
+    //         <span dangerouslySetInnerHTML={{__html: rawMarkup}} / > < /div>
+    //     );
+    //   }
+    // });
+
+    // var data = [
+    //   {author: "Pete Hunt", text: "This is one comment"},
+    //   {author: "Jordan Walke", text: "This is *another* comment"},
+    // ];
+
+
+    // React.renderComponent(
+    //   <CommentBox data={data} / > ,
+    //                 document.getElementById('content')
+    //             );
+    </script>
+</body>
+
+</html>
