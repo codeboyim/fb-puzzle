@@ -13,14 +13,6 @@
     <script src="//codeorigin.jquery.com/jquery-1.10.2.js"></script>
     <script src="/quickSort.js"></script>
     <style>
-    html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
-        margin: 0;
-        padding: 0;
-        border: 0;
-        font-size: 100%;
-        font: inherit;
-        vertical-align: baseline;
-    }
     .event {
         position:relative;
         vertical-align:top;
@@ -33,15 +25,17 @@
         margin:0px;
         top:0px;
         left:0px;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        -webkit-box-sizing: border-box;
     }
     #container {
         width:600px;
         padding: 0 10px;
         height:700px;
         position:relative;
-        background-color:#ccc;        
+        background-color:#ccc;
     }
-
     .col-2 {
         width:50%;
     }
@@ -69,14 +63,17 @@
     </div>
 
     <script>
-    Array.prototype.sort = function(cmp) {
-        return quickSort(this, cmp);
-    };
+    // Array.prototype.sort = function(cmp) {
+    //     return quickSort(this, cmp);
+    // };
 
 
     var events = [{
         start: 80,
         end: 150
+    }, {
+        start: 260,
+        end: 280
     }, {
         start: 80,
         end: 140
@@ -84,16 +81,13 @@
         start: 120,
         end: 150
     }, {
-        start: 135,
-        end: 200
-    }, {
         start: 140,
         end: 200
     }, {
         start: 165,
         end: 180
     }, {
-        start: 180,
+        start: 135,
         end: 200
     }, {
         start: 190,
@@ -105,8 +99,8 @@
         start: 240,
         end: 250
     }, {
-        start: 260,
-        end: 280
+        start: 180,
+        end: 200
     }, {
         start: 350,
         end: 500
@@ -122,114 +116,167 @@
     }, {
         start: 590,
         end: 700
-    }],
-        container = $("#container"),
-        groups = [],
-        eventTemplate = '<span class="event"></span>',
-        totalWidth = container.width(),
-        containerPaddingLeft = parseInt(container.css('paddingLeft'));
+    }];
 
 
-    events.sort(function(e1, e2) {
-        return e1.start - e2.start;
-    });
+    var SingleDayCal = (function() {
 
-    $.each(events, function(i, event) {
-        var group,
-            collide = false,
-            collideCount = 0;
+        var eventTemplate = '<div class="event"></div>',
+            minStart = 0,
+            maxEnd = 720;
 
-        if (i == 0) {
-            //init a group
-            group = {
-                eventIds: [i], //to store all the events in the same colliding group
-                maxCollideCount: 0 //to store the max colliding count one event has in the current group
-            };
+        function sortEvents(events) {
+            var groups = [];
 
-            groups.push(group);
-
-        } else {
-            //find last group
-            group = groups[groups.length - 1];
-
-            //find if collide with any event in the group
-            for (j = i - 1; j >= 0; j--) {
-                if (events[i].start <= events[j].end) {
-                    if (group.eventIds.indexOf(i) < 0) {
-                        group.eventIds.push(i);
-                    }
-                    collideCount++;
-                }
+            if (typeof(events) === 'undefined' || events === null || !events.length) {
+                return groups;
             }
 
-            if (collideCount == 0) {
-                //no collding happens, create a new group
-                group = {
-                    eventIds: [i],
-                    maxCollideCount: 0
-                };
+            events.sort(function(e1, e2) {
+                return e1.start - e2.start;
+            });
 
-                groups.push(group);
+            $.each(events, function(i, event) {
+                var group,
+                    collide = false,
+                    collideCount = 0,
+                    tmp;
 
-            } else if (collideCount > group.maxCollideCount) {
-                group.maxCollideCount = collideCount;
+                if (event.start > event.end) {
+                    tmp = event.end;
+                    event.end = event.start;
+                    event.start = tmp;
+                }
+                if (event.start < minStart) {
+                    event.start = minStart;
+                }
+
+                if (event.end > maxEnd) {
+                    event.end = maxEnd;
+                }
+
+                if (i == 0) {
+                    //init a group
+                    group = {
+                        eventIds: [i], //to store all the events in the same colliding group
+                        maxCollideCount: 0 //to store the max colliding count one event has in the current group
+                    };
+
+                    groups.push(group);
+
+                } else {
+                    //find last group
+                    group = groups[groups.length - 1];
+
+                    //find if collide with any event in the group
+                    for (j = i - 1; j >= 0; j--) {
+                        if (events[i].start <= events[j].end) {
+                            if (group.eventIds.indexOf(i) < 0) {
+                                group.eventIds.push(i);
+                            }
+                            collideCount++;
+                        }
+                    }
+
+                    if (collideCount == 0) {
+                        //no collding happens, create a new group
+                        group = {
+                            eventIds: [i],
+                            maxCollideCount: 0
+                        };
+
+                        groups.push(group);
+
+                    } else if (collideCount > group.maxCollideCount) {
+                        group.maxCollideCount = collideCount;
+                    }
+                }
+
+            });
+
+            return groups;
+
+        }
+
+
+        function renderEventElement(event, width, container) {
+
+            var eventElm = $(eventTemplate);
+
+            eventElm.appendTo(container)
+                .css('width', width)
+                .css('height', event.end - event.start)
+                .css('margin-top', event.start - eventElm.get(0).offsetTop)
+                .html('start: ' + event.start + ', end: ' + event.end);
+
+            return eventElm;
+        }
+
+        function renderEvents(events, groups, container) {
+
+            var totalWidth = container.width(),
+                containerPaddingLeft = parseInt(container.css('paddingLeft'));
+
+            if (typeof(containerPaddingLeft) !== 'number') {
+                containerPaddingLeft = 0;
+            }
+
+            container.html('');
+
+
+            $.each(groups, function(i, group) {
+
+                var groupEventsLen = group && group.eventIds ? group.eventIds.length : 0,
+                    event,
+                    eventWidth,
+                    elm,
+                    j;
+
+
+                if (group && group.eventIds && groupEventsLen > 0) {
+
+                    //all events in the same colliding group will have same width according to 2)
+                    eventWidth = Math.round(totalWidth / (group.maxCollideCount + 1));
+
+                    for (j = 0; j < groupEventsLen; j++) {
+                        event = events[group.eventIds[j]];
+                        elm = renderEventElement(event, eventWidth, container);
+
+                        if (j == groupEventsLen - 1) {
+                            elm.after('<div></div>')
+                        }
+                    }
+
+                }
+            });
+
+            return container;
+        }
+
+        var SingleDayCal = function(events, attachToElm) {
+            this._events = events || [];
+            this._container = attachToElm || $("#container");
+        };
+
+        SingleDayCal.prototype = {
+            layOutEvents: function() {
+                renderEvents(this._events, sortEvents(this._events), this._container);
+                return this;
             }
         }
 
-        // if (i == 0 || event.start >= groups[groups.length - 1].maxEnd) {
-        //     groups.push({
-        //         events: [i],
-        //         maxEnd: event.end
-        //     })
-        // } else {
-        //     g = groups[groups.length - 1];
-        //     g.events.push(i)
+        return SingleDayCal;
+    })();
 
-        //     if (event.end > g.maxEnd) {
-        //         g.maxEnd = event.end;
-        //     }
-        // }
-    });
-
-    function renderEventElement(event, width) {
-
-        var eventElm = $(eventTemplate);
-
-        eventElm.appendTo(container)
-            .css('width', width)
-            .css('height', event.end - event.start > 2 ? event.end - event.start - 2 : 0);
-
-        eventElm.css('margin-top', event.start - eventElm.get(0).offsetTop)
-            .html('start: ' + event.start + ', end: ' + event.end);
-
-        return eventElm;
+    function layOutDay(events) {
+        events = events || [];
+        var cal = new SingleDayCal(events);
+        cal.layOutEvents();
+        return events.length;
     }
 
-    $.each(groups, function(i, group) {
-
-        var groupEventsLen = group && group.eventIds ? group.eventIds.length : 0,
-            event,
-            eventWidth,
-            elm,
-            j;
-
-
-        if (group && group.eventIds && groupEventsLen > 0) {
-
-            //all events in the same colliding group will have same width according to 2)
-            eventWidth = Math.round(totalWidth / (group.maxCollideCount + 1)) - 3;
-
-            for (j = 0; j < groupEventsLen; j++) {
-                event = events[group.eventIds[j]];
-                elm = renderEventElement(event, eventWidth);
-
-                if (j == groupEventsLen - 1) {
-                    elm.after('<div></div>')
-                }
-            }
-
-        }
-    })
+    layOutDay(events);
+    
     </script>
 
     <div id="content"></div>
