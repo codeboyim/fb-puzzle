@@ -11,22 +11,37 @@
     <script src="http://fb.me/JSXTransformer-0.5.1.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js"></script>    -->
     <script src="//codeorigin.jquery.com/jquery-1.10.2.js"></script>
+    <script src="/quickSort.js"></script>
     <style>
+    html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        font-size: 100%;
+        font: inherit;
+        vertical-align: baseline;
+    }
     .event {
         position:relative;
         vertical-align:top;
         display:inline-block;
-        background-color:blue;
+        background-color:white;
         overflow:hidden;
+        border:solid 1px green;
         border-left:solid 2px red;
-        border-top:solid 1px green;
-        border-right:solid 1px green;
-        border-bottom:solid 1px green;
         width:100%;
         margin:0px;
         top:0px;
         left:0px;
     }
+    #container {
+        width:600px;
+        padding: 0 10px;
+        height:700px;
+        position:relative;
+        background-color:#ccc;        
+    }
+
     .col-2 {
         width:50%;
     }
@@ -37,15 +52,28 @@
         width:25%;
     }
     </style>
+
+    <!--[If IE]>
+    <style>
+    #container{
+        width:620px;
+    }
+    </style>
+    <![endif]-->
 </head>
 
 <body>
 
-    <div id="container" style=" width:600px; padding: 0 10px; height:700px;position:relative;background-color:#ccc;">
+    <div id="container">
 
     </div>
 
     <script>
+    Array.prototype.sort = function(cmp) {
+        return quickSort(this, cmp);
+    };
+
+
     var events = [{
         start: 80,
         end: 150
@@ -72,12 +100,12 @@
         end: 220
     }, {
         start: 200,
-        end: 300
+        end: 270
     }, {
-        start: 230,
+        start: 240,
         end: 250
     }, {
-        start: 270,
+        start: 260,
         end: 280
     }, {
         start: 350,
@@ -100,6 +128,11 @@
         eventTemplate = '<span class="event"></span>',
         totalWidth = container.width(),
         containerPaddingLeft = parseInt(container.css('paddingLeft'));
+
+
+    events.sort(function(e1, e2) {
+        return e1.start - e2.start;
+    });
 
     $.each(events, function(i, event) {
         var group,
@@ -164,8 +197,9 @@
 
         eventElm.appendTo(container)
             .css('width', width)
-            .css('height', event.end - event.start > 2 ? event.end - event.start - 2 : 0)
-            .css('margin-top', event.start - eventElm.get(0).offsetTop)
+            .css('height', event.end - event.start > 2 ? event.end - event.start - 2 : 0);
+
+        eventElm.css('margin-top', event.start - eventElm.get(0).offsetTop)
             .html('start: ' + event.start + ', end: ' + event.end);
 
         return eventElm;
@@ -189,32 +223,12 @@
                 event = events[group.eventIds[j]];
                 elm = renderEventElement(event, eventWidth);
 
-                if (i != 0 && j == 0) {
-                  elm.before('<div></div>')
+                if (j == groupEventsLen - 1) {
+                    elm.after('<div></div>')
                 }
             }
 
         }
-
-
-        // if (groupLen > 1) {
-
-
-
-        // } else {
-        //     var eventElm = $(eventTemplate);
-        //     event = events[group.events[0]];
-
-        //     eventElm.appendTo(container)
-        //         .css('top', event.start - eventElm.position().top)
-        //         .css('height', event.end - event.start);
-
-        //     console.log({
-        //         id: group.events[0],
-        //         start: event.start,
-        //         offsetTopAfter: eventElm.get(0).offsetTop
-        //     });
-        // }
     })
     </script>
 
