@@ -139,7 +139,7 @@
         end: 650
     }, {
         start: 590,
-        end: 700
+        end: 720
     }];
 
 
@@ -147,7 +147,11 @@
 
         var eventTemplate = '<div class="event"><div class="content"><h2 class="header">Sample Item</h2><p class="body">Sample Location</p></div></div>',
             minStart = 0,
-            maxEnd = 720;
+            maxEnd = 720,
+            eventIEOffset = !isLtIE8 ? null : {
+                x: 4,
+                y: 14
+            }; // offset for width/height in IE 6/7 
 
 
         //sort events by start time and place colliding events' indexes in groups
@@ -241,12 +245,12 @@
 
             eventElm.appendTo(container)
                 .css({
-                    width: !isLtIE8 ? width : (width - 4),
+                    width: width - (eventIEOffset ? eventIEOffset.x : 0),
                     marginTop: event.start - eventElm.get(0).offsetTop
                 })
                 .attr('title', event.start + ' - ' + event.end);
 
-            eventElm.children('.content').css('height', event.end - event.start-(isLtIE8?12:0));
+            eventElm.children('.content').css('height', event.end - event.start - (eventIEOffset ? eventIEOffset.y : 0));
 
             return eventElm;
         }
