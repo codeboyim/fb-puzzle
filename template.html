@@ -1,4 +1,4 @@
-<!-- template.html -->
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -13,44 +13,61 @@
     <script src="//codeorigin.jquery.com/jquery-1.10.2.js"></script>
     <script src="/quickSort.js"></script>
     <style>
+    body {
+        color:#797979;
+        font-family:'lucida grande', tahoma, verdana, arial, sans-serif;
+        font-size:11px
+    }
+    h1, h2, h3, h4, h5, h6 {
+        font-size:13px;
+        margin:0;
+        padding:0
+    }
+    p {
+        margin:0;
+        padding:0;
+    }
     .event {
         position:relative;
-        vertical-align:top;
+        vertical-align: top;
         display:inline-block;
-        background-color:white;
+        border-left:4px solid #4b6ea9;
         overflow:hidden;
-        border:solid 1px green;
-        border-left:solid 2px red;
-        width:100%;
-        margin:0px;
-        top:0px;
-        left:0px;
+        margin:0;
+        padding:0;
+        top:0;
+        left:0;
         box-sizing: border-box;
         -moz-box-sizing: border-box;
         -webkit-box-sizing: border-box;
     }
+    .event .content {
+        background-color:white;
+        overflow:hidden;
+        border:solid 1px #d5d5d5;
+        border-left:none;
+        padding:6px;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        -webkit-box-sizing: border-box;
+    }
+    .event .header {
+        color:#3b5998;
+        font-size:12px;
+    }
     #container {
         width:600px;
         padding: 0 10px;
-        height:700px;
+        height:720px;
         position:relative;
-        background-color:#ccc;
-    }
-    .col-2 {
-        width:50%;
-    }
-    .col-3 {
-        width:33%;
-    }
-    .col-4 {
-        width:25%;
+        background-color:#ececec;
     }
     </style>
-
-    <!--[If IE]>
+    <!--[if lt IE 8]>
     <style>
-    #container{
-        width:620px;
+    .event {
+        display:inline;
+        zoom:1;
     }
     </style>
     <![endif]-->
@@ -61,12 +78,19 @@
     <div id="container">
 
     </div>
+    <script>
+    var isLtIE8 = false;
+    </script>
+    <!--[if lt IE 8]>
+    <script>
+    isLtIE8=true;
+    </script>
+    <![endif]-->
 
     <script>
     // Array.prototype.sort = function(cmp) {
     //     return quickSort(this, cmp);
     // };
-
 
     var events = [{
         start: 80,
@@ -78,22 +102,22 @@
         start: 80,
         end: 140
     }, {
-        start: 120,
-        end: 150
+        start: 210,
+        end: 250
     }, {
-        start: 140,
-        end: 200
+        start: 210,
+        end: 220
     }, {
         start: 165,
         end: 180
     }, {
-        start: 135,
+        start: 160,
         end: 200
     }, {
-        start: 190,
+        start: 180,
         end: 220
     }, {
-        start: 200,
+        start: 175,
         end: 270
     }, {
         start: 240,
@@ -121,32 +145,41 @@
 
     var SingleDayCal = (function() {
 
-        var eventTemplate = '<div class="event"></div>',
+        var eventTemplate = '<div class="event"><div class="content"><h2 class="header">Sample Item</h2><p class="body">Sample Location</p></div></div>',
             minStart = 0,
             maxEnd = 720;
 
+
+        //sort events by start time and place colliding events' indexes in groups
+
         function sortEvents(events) {
+
             var groups = [];
 
-            if (typeof(events) === 'undefined' || events === null || !events.length) {
+            if (!Array.isArray(events) || !events.length) {
                 return groups;
             }
 
             events.sort(function(e1, e2) {
+
                 return e1.start - e2.start;
+
             });
 
-            $.each(events, function(i, event) {
+            events.forEach(function(event, i) {
+
                 var group,
                     collide = false,
                     collideCount = 0,
                     tmp;
 
+                //validate event
                 if (event.start > event.end) {
                     tmp = event.end;
                     event.end = event.start;
                     event.start = tmp;
                 }
+
                 if (event.start < minStart) {
                     event.start = minStart;
                 }
@@ -158,8 +191,8 @@
                 if (i == 0) {
                     //init a group
                     group = {
-                        eventIds: [i], //to store all the events in the same colliding group
-                        maxCollideCount: 0 //to store the max colliding count one event has in the current group
+                        eventIds: [i], //to store all the indexes of colliding events
+                        maxCollidingCount: 0 //to store the max colliding count of the group
                     };
 
                     groups.push(group);
@@ -168,27 +201,29 @@
                     //find last group
                     group = groups[groups.length - 1];
 
-                    //find if collide with any event in the group
+                    //find if colliding with any events in the group
                     for (j = i - 1; j >= 0; j--) {
+
                         if (events[i].start <= events[j].end) {
                             if (group.eventIds.indexOf(i) < 0) {
                                 group.eventIds.push(i);
                             }
                             collideCount++;
                         }
+
                     }
 
                     if (collideCount == 0) {
                         //no collding happens, create a new group
                         group = {
                             eventIds: [i],
-                            maxCollideCount: 0
+                            maxCollidingCount: 0
                         };
 
                         groups.push(group);
 
-                    } else if (collideCount > group.maxCollideCount) {
-                        group.maxCollideCount = collideCount;
+                    } else if (collideCount > group.maxCollidingCount) {
+                        group.maxCollidingCount = collideCount;
                     }
                 }
 
@@ -198,55 +233,81 @@
 
         }
 
+        //attach event to dom
 
         function renderEventElement(event, width, container) {
 
             var eventElm = $(eventTemplate);
 
             eventElm.appendTo(container)
-                .css('width', width)
-                .css('height', event.end - event.start)
-                .css('margin-top', event.start - eventElm.get(0).offsetTop)
-                .html('start: ' + event.start + ', end: ' + event.end);
+                .css({
+                    width: !isLtIE8 ? width : (width - 4),
+                    marginTop: event.start - eventElm.get(0).offsetTop
+                })
+                .attr('title', event.start + ' - ' + event.end);
+
+            eventElm.children('.content').css('height', event.end - event.start-(isLtIE8?12:0));
 
             return eventElm;
         }
 
         function renderEvents(events, groups, container) {
 
-            var totalWidth = container.width(),
-                containerPaddingLeft = parseInt(container.css('paddingLeft'));
+            var totalWidth = container.width();
 
-            if (typeof(containerPaddingLeft) !== 'number') {
-                containerPaddingLeft = 0;
-            }
+            container.before(totalWidth);
 
+            groups = !Array.isArray(groups) ? [] : groups;
+            events = !Array.isArray(events) ? [] : events;
             container.html('');
 
+            groups.forEach(function(group, i) {
 
-            $.each(groups, function(i, group) {
-
-                var groupEventsLen = group && group.eventIds ? group.eventIds.length : 0,
-                    event,
+                var groupEventsLen = group && Array.isArray(group.eventIds) ? group.eventIds.length : 0,
                     eventWidth,
-                    elm,
-                    j;
+                    columns; //store the latest end value of each column
 
-
-                if (group && group.eventIds && groupEventsLen > 0) {
+                if (groupEventsLen > 0) {
 
                     //all events in the same colliding group will have same width according to 2)
-                    eventWidth = Math.round(totalWidth / (group.maxCollideCount + 1));
+                    eventWidth = Math.round(totalWidth / (group.maxCollidingCount + 1));
 
-                    for (j = 0; j < groupEventsLen; j++) {
-                        event = events[group.eventIds[j]];
-                        elm = renderEventElement(event, eventWidth, container);
+                    //collading events in the same group will be placed into different columns
+                    columns = new Array(group.maxCollidingCount + 1);
 
+                    group.eventIds.forEach(function(id, j) {
+
+                        var event = events[id],
+                            elm = renderEventElement(event, eventWidth, container),
+                            colIndex = j % (group.maxCollidingCount + 1);
+
+                        //put event in the corresponding column.
+                        //consideration: instead of searching for the most *first fit* column for every event, 
+                        //a move into a preceding column will only be considered when it would overlap
+                        //the event above in the same column where it's supposed to be.
+                        if (typeof(columns[colIndex]) !== 'number' || columns[colIndex] < event.start) {
+
+                            columns[colIndex] = event.end;
+
+                        } else {
+
+                            for (var k = 0; k < colIndex; k++) {
+
+                                if (columns[k] < event.start) {
+                                    columns[k] = event.end;
+                                    elm.css('left', -(colIndex - k) * eventWidth);
+                                    break;
+                                }
+
+                            }
+
+                        }
+
+                        //clear the baseline for next group
                         if (j == groupEventsLen - 1) {
                             elm.after('<div></div>')
                         }
-                    }
-
+                    })
                 }
             });
 
@@ -259,7 +320,7 @@
         };
 
         SingleDayCal.prototype = {
-            layOutEvents: function() {
+            layOutDay: function() {
                 renderEvents(this._events, sortEvents(this._events), this._container);
                 return this;
             }
@@ -269,14 +330,17 @@
     })();
 
     function layOutDay(events) {
-        events = events || [];
-        var cal = new SingleDayCal(events);
-        cal.layOutEvents();
+
+        var cal;
+
+        events = Array.isArray(events) ? events : [];
+        cal = new SingleDayCal(events);
+        cal.layOutDay();
+
         return events.length;
     }
 
     layOutDay(events);
-    
     </script>
 
     <div id="content"></div>
