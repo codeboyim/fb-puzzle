@@ -16,7 +16,7 @@
     body {
         color:#797979;
         font-family:'lucida grande', tahoma, verdana, arial, sans-serif;
-        font-size:11px
+        font-size:11px;
     }
     h1, h2, h3, h4, h5, h6 {
         font-size:13px;
@@ -46,7 +46,6 @@
         overflow:hidden;
         border:solid 1px #d5d5d5;
         border-left:none;
-        padding:6px;
         box-sizing: border-box;
         -moz-box-sizing: border-box;
         -webkit-box-sizing: border-box;
@@ -54,6 +53,9 @@
     .event .header {
         color:#3b5998;
         font-size:12px;
+    }
+    .event .content > * {
+        margin:6px;
     }
     #container {
         width:600px;
@@ -154,11 +156,63 @@
             }; // offset for width/height in IE 6/7 
 
 
+        //structure to keep events in same colliding group.
+        var EventList = function(event) {
+
+            if (typeof(event) !== 'undefined' && event !== null) {
+                this.event = event;
+                this.next = null;
+            }
+
+        }
+
+        EventList.prototype = {
+
+            add: function(event) {
+
+                if (!event) {
+                    return null;
+                }
+
+                var current = this;
+
+                if (!current.event) {
+
+                    current.event = event;
+
+                } else {
+
+                    while (current.next) {
+                        current = current.next;
+                    }
+
+                    current.next = {
+                        event: event,
+                        next: null
+                    }
+
+                }
+
+                return event;
+            }
+        };
+
+
         //sort events by start time and place colliding events' indexes in groups
 
-        function sortEvents(events) {
+        function sortEventsIntoReversedGroups(events) {
 
-            var groups = [];
+            var groups = [],
+                eventList,
+                event,
+                current,
+                group,
+                eventAdded = false,
+                collideCount = 0,
+                tmp,
+                groupEventListCurrent,
+                groupEvent,
+                i;
 
             if (!Array.isArray(events) || !events.length) {
                 return groups;
@@ -170,12 +224,20 @@
 
             });
 
-            events.forEach(function(event, i) {
+            eventList = new EventList();
 
-                var group,
-                    collide = false,
-                    collideCount = 0,
-                    tmp;
+            events.forEach(function(event) {
+                eventList.add(event);
+            });
+
+            current = eventList;
+
+            i = 0;
+            
+            while (current && current.event) {
+
+                event = current.event;
+                eventAdded = false;
 
                 //validate event
                 if (event.start > event.end) {
@@ -195,125 +257,153 @@
                 if (i == 0) {
                     //init a group
                     group = {
-                        eventIds: [i], //to store all the indexes of colliding events
+                        eventList: new EventList(event), //to store all the indexes of colliding events
                         maxCollidingCount: 0 //to store the max colliding count of the group
                     };
 
-                    groups.push(group);
+                    groups.unshift(group);
 
                 } else {
                     //find last group
-                    group = groups[groups.length - 1];
+                    group = groups[0];
 
                     //find if colliding with any events in the group
-                    for (j = i - 1; j >= 0; j--) {
+                    groupEventListCurrent = group.eventList;
+                    groupEvent = groupEventListCurrent.event;
+                    collideCount = 0;
 
-                        if (events[i].start <= events[j].end) {
-                            if (group.eventIds.indexOf(i) < 0) {
-                                group.eventIds.push(i);
+                    while (groupEvent && event != groupEvent) {
+
+                        if (event.start <= groupEvent.end) {
+
+                            if (!eventAdded) {
+                                group.eventList.add(event);
+                                eventAdded = true;
                             }
+
                             collideCount++;
                         }
+
+                        groupEventListCurrent = groupEventListCurrent ? groupEventListCurrent.next : null;
+                        groupEvent = groupEventListCurrent ? groupEventListCurrent.event : null;
 
                     }
 
                     if (collideCount == 0) {
                         //no collding happens, create a new group
                         group = {
-                            eventIds: [i],
+                            eventList: new EventList(event),
                             maxCollidingCount: 0
                         };
 
-                        groups.push(group);
+                        groups.unshift(group);
 
                     } else if (collideCount > group.maxCollidingCount) {
+
                         group.maxCollidingCount = collideCount;
+
                     }
+
                 }
 
-            });
+
+                current = current.next;
+                i++;
+            }
 
             return groups;
+        }
 
+        function renderGroup(group, totalWidth, container) {
+
+            if (group === null) {
+                return;
+            }
+
+            var eventWidth = Math.round(totalWidth / (group.maxCollidingCount + 1)), //all events in the same colliding group will have same width according to 2)
+                columns = new Array(group.maxCollidingCount + 1), //store the latest end value of each column
+                current = group.eventList,
+                event,
+                elm,
+                colIndex = 0,
+                j = 0;
+
+            while (current) {
+
+                event = current.event;
+
+                if (event) {
+                    //collading events in the same group will be placed into different columns
+
+                    elm = renderEventElement(event, eventWidth, container);
+                    colIndex = j % (group.maxCollidingCount + 1);
+
+                    //a move into a preceding column will only be considered when it would overlap
+                    //the event above in the same column where it's supposed to be.
+                    if (typeof(columns[colIndex]) !== 'number' || columns[colIndex] < event.start) {
+
+                        columns[colIndex] = event.end;
+
+                    } else {
+
+                        for (var k = 0; k < colIndex; k++) {
+
+                            if (columns[k] < event.start) {
+                                columns[k] = event.end;
+                                //use 'left' to keep its original space it'd take if it wasn't moved.
+                                elm.css('left', -(colIndex - k) * eventWidth);
+                                break;
+                            }
+
+                        }
+
+                    }
+
+                    j++;
+                }
+
+                //clear the baseline for next group
+                if (!current.next) {
+                    elm.after('<div></div>')
+                }
+
+                current = current.next;
+            }
         }
 
         //attach event to dom
 
         function renderEventElement(event, width, container) {
 
-            var eventElm = $(eventTemplate);
+            var eventElm = $(eventTemplate),
+                height = event.end - event.start - (eventIEOffset ? eventIEOffset.y : 0),
+                width = width - (eventIEOffset ? eventIEOffset.x : 0);
 
             eventElm.appendTo(container)
                 .css({
-                    width: width - (eventIEOffset ? eventIEOffset.x : 0),
+                    width: width,
                     marginTop: event.start - eventElm.get(0).offsetTop
                 })
                 .attr('title', event.start + ' - ' + event.end);
 
-            eventElm.children('.content').css('height', event.end - event.start - (eventIEOffset ? eventIEOffset.y : 0));
+            eventElm.children('.content').css('height', height);
 
             return eventElm;
         }
 
-        function renderEvents(events, groups, container) {
+        function renderEvents(reversedGroups, container) {
 
-            var totalWidth = container.width();
+            var totalWidth = container.width(),
+                groupsLen = 0,
+                i = 0;
 
-            container.before(totalWidth);
-
-            groups = !Array.isArray(groups) ? [] : groups;
-            events = !Array.isArray(events) ? [] : events;
+            reversedGroups = !Array.isArray(reversedGroups) ? [] : reversedGroups;
+            groupsLen = reversedGroups.length;
             container.html('');
 
-            groups.forEach(function(group, i) {
-
-                var groupEventsLen = group && Array.isArray(group.eventIds) ? group.eventIds.length : 0,
-                    eventWidth,
-                    columns; //store the latest end value of each column
-
-                if (groupEventsLen > 0) {
-
-                    //all events in the same colliding group will have same width according to 2)
-                    eventWidth = Math.round(totalWidth / (group.maxCollidingCount + 1));
-
-                    //collading events in the same group will be placed into different columns
-                    columns = new Array(group.maxCollidingCount + 1);
-
-                    group.eventIds.forEach(function(id, j) {
-
-                        var event = events[id],
-                            elm = renderEventElement(event, eventWidth, container),
-                            colIndex = j % (group.maxCollidingCount + 1);
-
-                        //put event in the corresponding column.
-                        //consideration: instead of searching for the most *first fit* column for every event, 
-                        //a move into a preceding column will only be considered when it would overlap
-                        //the event above in the same column where it's supposed to be.
-                        if (typeof(columns[colIndex]) !== 'number' || columns[colIndex] < event.start) {
-
-                            columns[colIndex] = event.end;
-
-                        } else {
-
-                            for (var k = 0; k < colIndex; k++) {
-
-                                if (columns[k] < event.start) {
-                                    columns[k] = event.end;
-                                    elm.css('left', -(colIndex - k) * eventWidth);
-                                    break;
-                                }
-
-                            }
-
-                        }
-
-                        //clear the baseline for next group
-                        if (j == groupEventsLen - 1) {
-                            elm.after('<div></div>')
-                        }
-                    })
-                }
-            });
+            for (i = groupsLen - 1; i >= 0; i--) {
+                renderGroup(reversedGroups[i], totalWidth, container);
+            }
 
             return container;
         }
@@ -325,7 +415,7 @@
 
         SingleDayCal.prototype = {
             layOutDay: function() {
-                renderEvents(this._events, sortEvents(this._events), this._container);
+                renderEvents(sortEventsIntoReversedGroups(this._events), this._container);
                 return this;
             }
         }
