@@ -9,7 +9,7 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/es5-shim/2.1.0/es5-sham.min.js"></script>
     <!-- <script src="http://fb.me/react-0.5.1.js"></script>
     <script src="http://fb.me/JSXTransformer-0.5.1.js"></script>
-    <script src="http://cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js"></script>   
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js"></script>  
     <script src="//codeorigin.jquery.com/jquery-1.10.2.js"></script> -->
     <script src="/quickSort.js"></script>
     <style>
@@ -19,7 +19,7 @@
         font-size:11px;
     }
     .event {
-        position:relative;
+        position:absolute;
         vertical-align: top;
         display:inline-block;
         border-left:4px solid #4b6ea9;
@@ -135,7 +135,8 @@
                 x: 4,
                 y: 14
             }, // offset for width/height in IE 6/7
-            defaultContainer = document.getElementById('container');
+            defaultContainer = document.getElementById('container'),
+            eventTemplate = '<div class="event"><div class="content"><h2 class="header">Sample Item</h2><p class="body">Sample Location</p></div></div>';
 
 
         //structure to keep events in same colliding group.
@@ -305,18 +306,16 @@
             return groups;
         }
 
-        function renderGroup(group, totalWidth, container) {
+        function renderGroup(group, totalWidth, containerPaddingLeft, container) {
 
-            var eventWidth = Math.round(100 / (group.maxCollidingCount + 1)), //all events in the same colliding group will have same width according to 2)
+            var eventWidth = Math.round(totalWidth / (group.maxCollidingCount + 1)), //all events in the same colliding group will have same width according to 2)
                 columns = new Array(group.maxCollidingCount + 1), //store the latest end value of each column
                 current = group.eventList,
                 event,
                 elm,
                 colIndex = 0,
-                j = 0,
-                groupWrapper = document.createElement('div');
+                j = 0;
 
-            container.appendChild(groupWrapper);
 
             while (current) {
 
@@ -324,14 +323,15 @@
 
                 if (event) {
 
-                    elm = renderEventElement(event, eventWidth + '%', groupWrapper);
+                    elm = createEventElement(event);
+                    elm.style.width = eventWidth + 'px';
                     colIndex = j % (group.maxCollidingCount + 1);
 
-                    //a move into a preceding column will only be considered when it would overlap
-                    //the event above in the same column where it's supposed to be.
+
                     if (typeof(columns[colIndex]) !== 'number' || columns[colIndex] < event.start) {
 
                         columns[colIndex] = event.end;
+                        elm.style.left = (containerPaddingLeft + colIndex * eventWidth) + 'px';
 
                     } else {
 
@@ -339,14 +339,15 @@
 
                             if (columns[k] < event.start) {
                                 columns[k] = event.end;
-                                //use 'left' to keep its original space it'd take if it wasn't moved.
-                                elm.style.left = '-' + ((colIndex - k) * eventWidth) + '%';
+                                elm.style.left = (containerPaddingLeft + k * eventWidth) + 'px';
                                 break;
                             }
 
                         }
 
                     }
+
+                    container.appendChild(elm);
 
                     j++;
                 }
@@ -357,9 +358,8 @@
             return container;
         }
 
-        //attach event to dom
 
-        function renderEventElement(event, width, groupWrapper) {
+        function createEventElement(event) {
 
             var eventElm,
                 tmpElm,
@@ -367,12 +367,9 @@
             //width = width - (eventIEOffset ? eventIEOffset.x : 0);
 
             tmpElm = document.createElement('div');
-            tmpElm.innerHTML = '<div class="event"><div class="content"><h2 class="header">Sample Item</h2><p class="body">Sample Location</p></div></div>';
+            tmpElm.innerHTML = eventTemplate;
             eventElm = tmpElm.firstChild;
-            groupWrapper.appendChild(eventElm);
-
-            eventElm.style.width = width;
-            eventElm.style.marginTop = (event.start - eventElm.offsetTop) + 'px';
+            eventElm.style.top = event.start + 'px';
             eventElm.firstChild.style.height = height + 'px';
 
             return eventElm;
@@ -383,17 +380,22 @@
             var totalWidth = 0,
                 groupsLen = 0,
                 i = 0,
-                groupWrapper;
+                groupWrapper,
+                containerComputedCss = window.getComputedStyle(container),
+                containerPaddingLeft;
 
             reversedGroups = !Array.isArray(reversedGroups) ? [] : reversedGroups;
-            totalWidth = container.clientWidth - container.style;
+            totalWidth = parseInt(containerComputedCss.width) || 0;
+            containerPaddingLeft = parseInt(containerComputedCss.paddingLeft) || 0;
             groupsLen = reversedGroups.length;
+            // alert(window.getComputedStyle(container).width);
 
+            // alert($('#container').width())
             //container.html('');
             container.innerHTML = '';
 
             for (i = groupsLen - 1; i >= 0; i--) {
-                renderGroup(reversedGroups[i], totalWidth, container);
+                renderGroup(reversedGroups[i], totalWidth, containerPaddingLeft, container);
             }
 
             return container;
