@@ -93,10 +93,10 @@
         end: 220
     }, {
         start: 165,
-        end: 180
+        end: 450
     }, {
         start: 160,
-        end: 200
+        end: 300
     }, {
         start: 180,
         end: 220
@@ -138,11 +138,31 @@
             defaultContainer = document.getElementById('container'),
             eventTemplate = '<div class="event"><div class="content"><h2 class="header">Sample Item</h2><p class="body">Sample Location</p></div></div>';
 
+        /*
+            helper functions
+        */
 
-        //structure to keep events in same colliding group.
+        function getComputedStyle(elm) {
+            return window.getComputedStyle ? window.getComputedStyle(elm) : elm.currentStyle;
+        }
+
+        function isNumeric(n) {
+            return !isNaN(parseFloat(n)) && isFinite(n);
+        }
+
+
+        /*
+            EventList: a structure to keep events in same colliding group
+        */
+
         var EventList = function(event) {
 
             if (typeof(event) !== 'undefined' && event !== null) {
+
+                if (!isNumeric(event.start) || !isNumeric(event.end)) {
+                    throw new Error('EventList: event must have numeric start and end values');
+                }
+
                 this.event = event;
                 this.next = null;
             }
@@ -159,6 +179,9 @@
                     throw new Error('EventList.add(): event must not be undefined or null')
                 }
 
+                if (!isNumeric(event.start) || !isNumeric(event.end)) {
+                    throw new Error('EventList.add(): event must have numeric start and end values');
+                }
 
                 if (!current.event) {
 
@@ -181,6 +204,11 @@
             }
         };
 
+
+        /*
+            rectifyEvent: validate and correct 'event' object
+         */
+
         function rectifyEvent(event) {
 
             var tmp;
@@ -201,14 +229,22 @@
 
         }
 
+
+        /*
+            compareEvents: compare function for sorting
+        */
+
         function compareEvents(event1, event2) {
 
             return event1.start - event2.start;
 
         }
 
-        //sort events by starting time and group colliding events
-        //return reversed groups with latest inserted group on the top
+
+        /*
+            sortEventsIntoReversedGroups: sort events by starting time and group colliding events. it
+            returns reversed groups with latest inserted group in the most front.
+        */
 
         function sortEventsIntoReversedGroups(events) {
 
@@ -246,11 +282,11 @@
                 //validate and rectify event
                 rectifyEvent(event);
 
-                if (i == 0) {
+                if (i === 0) {
                     //init a group
                     group = {
                         eventList: new EventList(event), //to store all the indexes of colliding events
-                        maxCollidingCount: 0 //to store the max colliding count of the group
+                        maxCollidingCount: 1 //to store the max number of colliding events of the group. default to 1 if no other event in the same group
                     };
 
                     groups.unshift(group);
@@ -262,7 +298,7 @@
                     //find if colliding with any events in the group
                     groupEventListCurrent = group.eventList;
                     groupEvent = groupEventListCurrent.event;
-                    collideCount = 0;
+                    collideCount = 1;
 
                     while (groupEvent && event != groupEvent) {
 
@@ -281,11 +317,11 @@
 
                     }
 
-                    if (collideCount == 0) {
+                    if (collideCount === 1) {
                         //no collding happens, create a new group
                         group = {
                             eventList: new EventList(event),
-                            maxCollidingCount: 0
+                            maxCollidingCount: 1
                         };
 
                         groups.unshift(group);
@@ -306,60 +342,89 @@
             return groups;
         }
 
-        function renderGroup(group, totalWidth, containerPaddingLeft, container) {
 
-            var eventWidth = Math.round(totalWidth / (group.maxCollidingCount + 1)), //all events in the same colliding group will have same width according to 2)
-                columns = new Array(group.maxCollidingCount + 1), //store the latest end value of each column
-                current = group.eventList,
-                event,
-                elm,
-                colIndex = 0,
-                j = 0;
+        /*
+            renderEvents: attach all groups to container
+        */
 
+        function renderEvents(reversedGroups, container) {
 
-            while (current) {
+            var containerComputedCss = getComputedStyle(container),
+                totalWidth = parseInt(containerComputedCss.width) || 0,
+                containerPaddingLeft = parseInt(containerComputedCss.paddingLeft) || 0,
+                groupsLen = 0,
+                i = 0,
+                groupWrapper;
 
-                event = current.event;
+            reversedGroups = !Array.isArray(reversedGroups) ? [] : reversedGroups;
+            groupsLen = reversedGroups.length;
 
-                if (event) {
+            container.innerHTML = '';
 
-                    elm = createEventElement(event);
-                    elm.style.width = eventWidth + 'px';
-                    colIndex = j % (group.maxCollidingCount + 1);
-
-
-                    if (typeof(columns[colIndex]) !== 'number' || columns[colIndex] < event.start) {
-
-                        columns[colIndex] = event.end;
-                        elm.style.left = (containerPaddingLeft + colIndex * eventWidth) + 'px';
-
-                    } else {
-
-                        for (var k = 0; k < colIndex; k++) {
-
-                            if (columns[k] < event.start) {
-                                columns[k] = event.end;
-                                elm.style.left = (containerPaddingLeft + k * eventWidth) + 'px';
-                                break;
-                            }
-
-                        }
-
-                    }
-
-                    container.appendChild(elm);
-
-                    j++;
-                }
-
-                current = current.next;
+            for (i = groupsLen - 1; i >= 0; i--) {
+                renderGroup(reversedGroups[i], totalWidth, containerPaddingLeft, container);
             }
 
             return container;
         }
 
 
-        function createEventElement(event) {
+        /*
+            renderGroup: attach a group to container
+        */
+
+        function renderGroup(group, totalWidth, containerPaddingLeft, container) {
+
+            var eventWidth = Math.round(totalWidth / group.maxCollidingCount), //all events in the same colliding group will have same width according to 2)
+                columns = new Array(group.maxCollidingCount), //store the latest end value of each column
+                current = group.eventList,
+                event,
+                elm,
+                colIndex = 0,
+                i = 0,
+                j = 0;
+
+
+            while (current) {
+
+                event = current.event;
+                elm = createEventElement(event, eventWidth);
+                colIndex = i % (group.maxCollidingCount);
+
+                if (columns[colIndex] && columns[colIndex] > event.start) {
+                    //to seek another column only if current column doesn't fit
+                    //events should scatter better.
+
+                    for (j = 0; j < group.maxCollidingCount; j++) {
+
+                        if (columns[j] <= event.start) {
+                            columns[j] = event.end;
+                            elm.style.left = (containerPaddingLeft + j * eventWidth) + 'px';
+                            break;
+                        }
+
+                    }
+
+                } else {
+
+                    columns[colIndex] = event.end;
+                    elm.style.left = (containerPaddingLeft + colIndex * eventWidth) + 'px';
+                }
+
+                container.appendChild(elm);
+                current = current.next;
+                i++;
+            }
+
+            return container;
+        }
+
+
+        /*
+            createEventElement: create a html dom element for 'event' object
+        */
+
+        function createEventElement(event, width) {
 
             var eventElm,
                 tmpElm,
@@ -370,38 +435,16 @@
             tmpElm.innerHTML = eventTemplate;
             eventElm = tmpElm.firstChild;
             eventElm.style.top = event.start + 'px';
+            eventElm.style.width = width + 'px';
             eventElm.firstChild.style.height = height + 'px';
 
             return eventElm;
         }
 
-        function renderEvents(reversedGroups, container) {
 
-            var totalWidth = 0,
-                groupsLen = 0,
-                i = 0,
-                groupWrapper,
-                containerComputedCss = window.getComputedStyle(container),
-                containerPaddingLeft;
-
-            reversedGroups = !Array.isArray(reversedGroups) ? [] : reversedGroups;
-            totalWidth = parseInt(containerComputedCss.width) || 0;
-            containerPaddingLeft = parseInt(containerComputedCss.paddingLeft) || 0;
-            groupsLen = reversedGroups.length;
-            // alert(window.getComputedStyle(container).width);
-
-            // alert($('#container').width())
-            //container.html('');
-            container.innerHTML = '';
-
-            for (i = groupsLen - 1; i >= 0; i--) {
-                renderGroup(reversedGroups[i], totalWidth, containerPaddingLeft, container);
-            }
-
-            return container;
-        }
-
-        //
+        /*
+            SingleDayCal: public class to load and display a list of events in a single day calendar 
+        */
 
         var SingleDayCal = function(events, container) {
 
@@ -422,17 +465,24 @@
 
         }
 
+
+        /*
+            layOutDay: public interface to execute SingleDayCal
+        */
+        exports.layOutDay = function(events) {
+
+            var cal = new SingleDayCal(events);
+
+            cal.layOutDay();
+
+            return events.length;
+        }
+
         return SingleDayCal;
+
     })(this);
 
-    function layOutDay(events) {
 
-        var cal = new SingleDayCal(events);
-
-        cal.layOutDay();
-
-        return events.length;
-    }
 
     layOutDay(events);
     </script>
