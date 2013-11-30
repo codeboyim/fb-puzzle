@@ -9,8 +9,8 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/es5-shim/2.1.0/es5-sham.min.js"></script>
     <!-- <script src="http://fb.me/react-0.5.1.js"></script>
     <script src="http://fb.me/JSXTransformer-0.5.1.js"></script>
-    <script src="http://cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js"></script>    -->
-    <script src="//codeorigin.jquery.com/jquery-1.10.2.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js"></script>   
+    <script src="//codeorigin.jquery.com/jquery-1.10.2.js"></script> -->
     <script src="/quickSort.js"></script>
     <style>
     body {
@@ -58,6 +58,8 @@
         height:720px;
         position:relative;
         background-color:#ececec;
+        border:0 20px;
+        overflow:scroll;
     }
     </style>
     <!--[if lt IE 8]>
@@ -128,15 +130,14 @@
 
     var SingleDayCal = (function(exports) {
 
-        var eventTemplate = '<div class="event"><div class="content"><h2 class="header">Sample Item</h2><p class="body">Sample Location</p></div></div>',
-            minStart = 0,
+        var minStart = 0,
             maxEnd = 720,
             isLtIE8 = document.documentMode && document.documentMode < 8,
             eventIEOffset = !isLtIE8 ? null : {
                 x: 4,
                 y: 14
             }, // offset for width/height in IE 6/7
-            defaultContainer = $('#container');
+            defaultContainer = document.getElementById('container');
 
 
         //structure to keep events in same colliding group.
@@ -308,22 +309,24 @@
 
         function renderGroup(group, totalWidth, container) {
 
-            var eventWidth = Math.round(totalWidth / (group.maxCollidingCount + 1)), //all events in the same colliding group will have same width according to 2)
+            var eventWidth = Math.round(100 / (group.maxCollidingCount + 1)), //all events in the same colliding group will have same width according to 2)
                 columns = new Array(group.maxCollidingCount + 1), //store the latest end value of each column
                 current = group.eventList,
                 event,
                 elm,
                 colIndex = 0,
-                j = 0;
+                j = 0,
+                groupWrapper = document.createElement('div');
+
+            container.appendChild(groupWrapper);
 
             while (current) {
 
                 event = current.event;
 
                 if (event) {
-                    //collading events in the same group will be placed into different columns
 
-                    elm = renderEventElement(event, eventWidth, container);
+                    elm = renderEventElement(event, eventWidth + '%', groupWrapper);
                     colIndex = j % (group.maxCollidingCount + 1);
 
                     //a move into a preceding column will only be considered when it would overlap
@@ -339,7 +342,7 @@
                             if (columns[k] < event.start) {
                                 columns[k] = event.end;
                                 //use 'left' to keep its original space it'd take if it wasn't moved.
-                                elm.css('left', -(colIndex - k) * eventWidth);
+                                elm.style.left = '-' + ((colIndex - k) * eventWidth) + '%';
                                 break;
                             }
 
@@ -350,11 +353,6 @@
                     j++;
                 }
 
-                //clear the baseline for next group
-                if (!current.next) {
-                    elm.after('<div></div>')
-                }
-
                 current = current.next;
             }
 
@@ -363,20 +361,21 @@
 
         //attach event to dom
 
-        function renderEventElement(event, width, container) {
+        function renderEventElement(event, width, groupWrapper) {
 
-            var eventElm = $(eventTemplate),
-                height = event.end - event.start - (eventIEOffset ? eventIEOffset.y : 0),
-                width = width - (eventIEOffset ? eventIEOffset.x : 0);
+            var eventElm,
+                tmpElm,
+                height = event.end - event.start - (eventIEOffset ? eventIEOffset.y : 0);
+            //width = width - (eventIEOffset ? eventIEOffset.x : 0);
 
-            eventElm.appendTo(container)
-                .css({
-                    width: width,
-                    marginTop: event.start - eventElm.get(0).offsetTop
-                })
-                .attr('title', event.start + ' - ' + event.end);
+            tmpElm = document.createElement('div');
+            tmpElm.innerHTML = '<div class="event"><div class="content"><h2 class="header">Sample Item</h2><p class="body">Sample Location</p></div></div>';
+            eventElm = tmpElm.firstChild;
+            groupWrapper.appendChild(eventElm);
 
-            eventElm.children('.content').css('height', height);
+            eventElm.style.width = width;
+            eventElm.style.marginTop = (event.start - eventElm.offsetTop) + 'px';
+            eventElm.firstChild.style.height = height + 'px';
 
             return eventElm;
         }
@@ -385,13 +384,15 @@
 
             var totalWidth = 0,
                 groupsLen = 0,
-                i = 0;
+                i = 0,
+                groupWrapper;
 
             reversedGroups = !Array.isArray(reversedGroups) ? [] : reversedGroups;
-            totalWidth = container.width();
+            totalWidth = container.clientWidth - container.style;
             groupsLen = reversedGroups.length;
 
-            container.html('');
+            //container.html('');
+            container.innerHTML = '';
 
             for (i = groupsLen - 1; i >= 0; i--) {
                 renderGroup(reversedGroups[i], totalWidth, container);
