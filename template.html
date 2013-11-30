@@ -18,15 +18,6 @@
         font-family:'lucida grande', tahoma, verdana, arial, sans-serif;
         font-size:11px;
     }
-    h1, h2, h3, h4, h5, h6 {
-        font-size:13px;
-        margin:0;
-        padding:0
-    }
-    p {
-        margin:0;
-        padding:0;
-    }
     .event {
         position:relative;
         vertical-align: top;
@@ -51,11 +42,15 @@
         -webkit-box-sizing: border-box;
     }
     .event .header {
+        font-size:13px;
         color:#3b5998;
         font-size:12px;
-    }
-    .event .content > * {
         margin:6px;
+        padding:0;
+    }
+    .event .body {
+        margin:6px;
+        padding:0;
     }
     #container {
         width:600px;
@@ -81,19 +76,6 @@
 
     </div>
     <script>
-    var isLtIE8 = false;
-    </script>
-    <!--[if lt IE 8]>
-    <script>
-    isLtIE8=true;
-    </script>
-    <![endif]-->
-
-    <script>
-    // Array.prototype.sort = function(cmp) {
-    //     return quickSort(this, cmp);
-    // };
-
     var events = [{
         start: 80,
         end: 150
@@ -144,16 +126,17 @@
         end: 720
     }];
 
-
-    var SingleDayCal = (function() {
+    var SingleDayCal = (function(exports) {
 
         var eventTemplate = '<div class="event"><div class="content"><h2 class="header">Sample Item</h2><p class="body">Sample Location</p></div></div>',
             minStart = 0,
             maxEnd = 720,
+            isLtIE8 = document.documentMode && document.documentMode < 8,
             eventIEOffset = !isLtIE8 ? null : {
                 x: 4,
                 y: 14
-            }; // offset for width/height in IE 6/7 
+            }, // offset for width/height in IE 6/7
+            defaultContainer = $('#container');
 
 
         //structure to keep events in same colliding group.
@@ -170,11 +153,12 @@
 
             add: function(event) {
 
-                if (!event) {
-                    return null;
+                var current = this;
+
+                if (typeof(event) === 'undefined' || event === null) {
+                    throw new Error('EventList.add(): event must not be undefined or null')
                 }
 
-                var current = this;
 
                 if (!current.event) {
 
@@ -197,8 +181,34 @@
             }
         };
 
+        function rectifyEvent(event) {
 
-        //sort events by start time and place colliding events' indexes in groups
+            var tmp;
+
+            if (event.start > event.end) {
+                tmp = event.end;
+                event.end = event.start;
+                event.start = tmp;
+            }
+
+            if (event.start < minStart) {
+                event.start = minStart;
+            }
+
+            if (event.end > maxEnd) {
+                event.end = maxEnd;
+            }
+
+        }
+
+        function compareEvents(event1, event2) {
+
+            return event1.start - event2.start;
+
+        }
+
+        //sort events by starting time and group colliding events
+        //return reversed groups with latest inserted group on the top
 
         function sortEventsIntoReversedGroups(events) {
 
@@ -209,7 +219,6 @@
                 group,
                 eventAdded = false,
                 collideCount = 0,
-                tmp,
                 groupEventListCurrent,
                 groupEvent,
                 i;
@@ -218,11 +227,7 @@
                 return groups;
             }
 
-            events.sort(function(e1, e2) {
-
-                return e1.start - e2.start;
-
-            });
+            events.sort(compareEvents);
 
             eventList = new EventList();
 
@@ -231,28 +236,15 @@
             });
 
             current = eventList;
-
             i = 0;
-            
+
             while (current && current.event) {
 
                 event = current.event;
                 eventAdded = false;
 
-                //validate event
-                if (event.start > event.end) {
-                    tmp = event.end;
-                    event.end = event.start;
-                    event.start = tmp;
-                }
-
-                if (event.start < minStart) {
-                    event.start = minStart;
-                }
-
-                if (event.end > maxEnd) {
-                    event.end = maxEnd;
-                }
+                //validate and rectify event
+                rectifyEvent(event);
 
                 if (i == 0) {
                     //init a group
@@ -264,7 +256,7 @@
                     groups.unshift(group);
 
                 } else {
-                    //find last group
+                    //find last added group
                     group = groups[0];
 
                     //find if colliding with any events in the group
@@ -306,8 +298,8 @@
 
                 }
 
-
                 current = current.next;
+
                 i++;
             }
 
@@ -315,10 +307,6 @@
         }
 
         function renderGroup(group, totalWidth, container) {
-
-            if (group === null) {
-                return;
-            }
 
             var eventWidth = Math.round(totalWidth / (group.maxCollidingCount + 1)), //all events in the same colliding group will have same width according to 2)
                 columns = new Array(group.maxCollidingCount + 1), //store the latest end value of each column
@@ -369,6 +357,8 @@
 
                 current = current.next;
             }
+
+            return container;
         }
 
         //attach event to dom
@@ -393,12 +383,14 @@
 
         function renderEvents(reversedGroups, container) {
 
-            var totalWidth = container.width(),
+            var totalWidth = 0,
                 groupsLen = 0,
                 i = 0;
 
             reversedGroups = !Array.isArray(reversedGroups) ? [] : reversedGroups;
+            totalWidth = container.width();
             groupsLen = reversedGroups.length;
+
             container.html('');
 
             for (i = groupsLen - 1; i >= 0; i--) {
@@ -408,27 +400,34 @@
             return container;
         }
 
-        var SingleDayCal = function(events, attachToElm) {
-            this._events = events || [];
-            this._container = attachToElm || $("#container");
+        //
+
+        var SingleDayCal = function(events, container) {
+
+            if (!Array.isArray(events)) {
+                throw new Error('SingleDayCal(): first argument must be an array.')
+            }
+
+            this._events = events;
+            this._container = container || defaultContainer;
         };
 
         SingleDayCal.prototype = {
+
             layOutDay: function() {
                 renderEvents(sortEventsIntoReversedGroups(this._events), this._container);
                 return this;
             }
+
         }
 
         return SingleDayCal;
-    })();
+    })(this);
 
     function layOutDay(events) {
 
-        var cal;
+        var cal = new SingleDayCal(events);
 
-        events = Array.isArray(events) ? events : [];
-        cal = new SingleDayCal(events);
         cal.layOutDay();
 
         return events.length;
