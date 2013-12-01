@@ -53,6 +53,8 @@
         padding:0;
     }
     #container {
+    }
+    .day {
         width:600px;
         padding: 0 10px;
         height:720px;
@@ -72,9 +74,15 @@
 
 <body>
 
-    <div id="container">
+    <div>
+        <ul>
+            <li></li>
+        </ul>
+        <div id="container">
 
+        </div>
     </div>
+
     <script>
     var events = [{
         start: 80,
@@ -127,7 +135,8 @@
     }];
 
     var SingleDayCal = (function(exports) {
-
+        'use strict';
+        
         var minStart = 0,
             maxEnd = 720,
             isLtIE8 = document.documentMode && document.documentMode < 8,
@@ -438,6 +447,9 @@
             eventElm.style.width = width + 'px';
             eventElm.firstChild.style.height = height + 'px';
 
+            //TO REMOVE
+            eventElm.setAttribute('title', event.start + ' - ' + event.end);
+
             return eventElm;
         }
 
@@ -459,7 +471,11 @@
         SingleDayCal.prototype = {
 
             layOutDay: function() {
-                renderEvents(sortEventsIntoReversedGroups(this._events), this._container);
+                var elmDay = document.createElement('div');
+                elmDay.className = 'day';
+                this._container.appendChild(elmDay);
+                renderEvents(sortEventsIntoReversedGroups(this._events), elmDay);
+
                 return this;
             }
 
