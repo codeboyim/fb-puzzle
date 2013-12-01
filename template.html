@@ -5,33 +5,43 @@
     <title>Hello React</title>
 
     <script src="/scripts/console-polyfill.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/es5-shim/2.1.0/es5-shim.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/es5-shim/2.1.0/es5-sham.min.js"></script>
+    <script src="/scripts/es5-shim.min.js"></script>
+    <script src="/scripts/es5-sham.min.js"></script>
+    <script src="/scripts/moment.min.js"></script>
     <!-- <script src="http://fb.me/react-0.5.1.js"></script>
     <script src="http://fb.me/JSXTransformer-0.5.1.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js"></script>  
     <script src="//codeorigin.jquery.com/jquery-1.10.2.js"></script> -->
-    <script src="/quickSort.js"></script>
+
     <script>
     var GLOBAL_VARS = {};
     </script>
     <style>
     body {
-        color:#797979;
         font-family:'lucida grande', tahoma, verdana, arial, sans-serif;
         font-size:11px;
     }
     .singleDayCal {
-        width:;
+        display:inline-block;
+        color:#797979;
     }
-    .day {
+    .singleDayCal:after {
+        content:'.';
+        clear:both;
+        display:block;
+        visibility: hidden;
+        height:0;
+        line-height: 0；
+    }
+    .singleDayCal-day {
         width:600px;
         padding: 0 10px;
         height:720px;
         position:relative;
         background-color:#ececec;
+        float:left;
     }
-    .event {
+    .singleDayCal-event {
         position:absolute;
         vertical-align: top;
         display:inline-block;
@@ -45,7 +55,7 @@
         -moz-box-sizing: border-box;
         -webkit-box-sizing: border-box;
     }
-    .event .content {
+    .singleDayCal-event .content {
         background-color:white;
         overflow:hidden;
         border:solid 1px #d5d5d5;
@@ -54,23 +64,54 @@
         -moz-box-sizing: border-box;
         -webkit-box-sizing: border-box;
     }
-    .event .header {
-        font-size:13px;
-        color:#3b5998;
+    .singleDayCal-event .header {
+        color:#4b6ea8;
         font-size:12px;
-        margin:6px;
+        margin:5px 0 0 5px;
         padding:0;
     }
-    .event .body {
-        margin:6px;
+    .singleDayCal-event .body {
+        font-size:9px;
+        margin:0 5px;
         padding:0;
+    }
+    .singleDayCal-times {
+        width: 75px;
+        margin:0 10px 0 0;
+        padding:0;
+        float:left;
+        height:720px;
+        text-align:right;
+        position:relative;
+        font-size:9px;
+        color:#a7a7a7;
+        list-style:none;
+        top:-5px;
+    }
+    .singleDayCal-times li {
+        padding:0;
+        margin:0;
+        position:absolute;
+        width:100%;
+    }
+    .singleDayCal-times em {
+        color:#686868;
+        font-style:normal;
+        font-size:12px;
+        font-weight:bold;
+        margin-right:5px;
+    }
+    #container {
+        padding:10px;
     }
     </style>
     <!--[if lt IE 8]>
     <style>
-    .event {
-        display:inline;
-        zoom:1;
+    .singleDayCal {
+        display:inline-block;
+    }
+    .singleDayCal-event {
+        height:1%;
     }
     </style>
     <script>
@@ -81,19 +122,13 @@
 </head>
 
 <body>
+    <div id="container">
 
-    <div>
-        <ul>
-            <li></li>
-        </ul>
-        <div id="container">
-
-        </div>
     </div>
 
     <script>
     var events = [{
-        start: 80,
+        start: 90,
         end: 150
     }, {
         start: 260,
@@ -121,7 +156,7 @@
         end: 270
     }, {
         start: 240,
-        end: 250
+        end: 242
     }, {
         start: 180,
         end: 200
@@ -148,13 +183,17 @@
 
         var minStart = 0,
             maxEnd = 720,
+            startHour = 9,
+            endHour = 21,
+            timeInterval = 30,
             isLtIE8 = GLOBAL_VARS.isLtIE8 || false,
             eventIEOffset = !isLtIE8 ? null : {
+                // offset for width/height in IE 6/7
                 x: 4,
                 y: 14
-            }, // offset for width/height in IE 6/7
+            },
             defaultContainer = document.getElementById('container'),
-            eventTemplate = '<div class="event"><div class="content"><h2 class="header">Sample Item</h2><p class="body">Sample Location</p></div></div>';
+            eventTemplate = '<div class="singleDayCal-event"><div class="content"><h2 class="header">Sample Item</h2><p class="body">Sample Location</p></div></div>';
 
         /*
             helper functions
@@ -178,7 +217,7 @@
             if (typeof(event) !== 'undefined' && event !== null) {
 
                 if (!isNumeric(event.start) || !isNumeric(event.end)) {
-                    throw new Error('EventList: event must have numeric start and end values');
+                    throw new Error('EventList: argument \'event\' must have numeric start and end values.');
                 }
 
                 this.event = event;
@@ -194,11 +233,11 @@
                 var current = this;
 
                 if (typeof(event) === 'undefined' || event === null) {
-                    throw new Error('EventList.add(): event must not be undefined or null')
+                    throw new Error('EventList.add(): argument \'event\' must not be undefined or null.');
                 }
 
                 if (!isNumeric(event.start) || !isNumeric(event.end)) {
-                    throw new Error('EventList.add(): event must have numeric start and end values');
+                    throw new Error('EventList.add(): argument \'event\ must have numeric start and end values.');
                 }
 
                 if (!current.event) {
@@ -297,23 +336,25 @@
                 event = current.event;
                 eventAdded = false;
 
-                //validate and rectify event
+                // validate and rectify event
                 rectifyEvent(event);
 
                 if (i === 0) {
-                    //init a group
+                    // init a group
                     group = {
-                        eventList: new EventList(event), //to store all the indexes of colliding events
-                        maxCollidingCount: 1 //to store the max number of colliding events of the group. default to 1 if no other event in the same group
+                        eventList: new EventList(event),
+                        // store all the indexes of colliding events
+                        maxCollidingCount: 1
+                        // store the max number of colliding events of the group. default to 1 if no other event in the same group
                     };
 
                     groups.unshift(group);
 
                 } else {
-                    //find last added group
+                    // find last added group
                     group = groups[0];
 
-                    //find if colliding with any events in the group
+                    // find if colliding with any events in the group
                     groupEventListCurrent = group.eventList;
                     groupEvent = groupEventListCurrent.event;
                     collideCount = 1;
@@ -367,23 +408,30 @@
 
         function renderEvents(reversedGroups, container) {
 
-            var containerComputedCss = getComputedStyle(container),
-                totalWidth = parseInt(containerComputedCss.width) || 0,
-                containerPaddingLeft = parseInt(containerComputedCss.paddingLeft) || 0,
+            var containerComputedCss,
+                totalWidth,
+                containerPaddingLeft,
                 groupsLen = 0,
                 i = 0,
-                groupWrapper;
+                groupWrapper,
+                elmDay = document.createElement('div');
 
+            elmDay.className = 'singleDayCal-day';
+            container.appendChild(elmDay);
+
+            containerComputedCss = getComputedStyle(elmDay);
+            totalWidth = parseInt(containerComputedCss.width) || 0;
+            containerPaddingLeft = parseInt(containerComputedCss.paddingLeft) || 0;
             reversedGroups = !Array.isArray(reversedGroups) ? [] : reversedGroups;
             groupsLen = reversedGroups.length;
 
-            container.innerHTML = '';
-
             for (i = groupsLen - 1; i >= 0; i--) {
-                renderGroup(reversedGroups[i], totalWidth, containerPaddingLeft, container);
+                renderGroup(reversedGroups[i], totalWidth, containerPaddingLeft, elmDay);
             }
 
-            return container;
+
+
+            return elmDay;
         }
 
 
@@ -393,9 +441,12 @@
 
         function renderGroup(group, totalWidth, containerPaddingLeft, container) {
 
-            var eventWidth = Math.round(totalWidth / group.maxCollidingCount), //all events in the same colliding group will have same width according to 2)
-                eventStacks = new Array(group.maxCollidingCount), //store the latest end value of each stack
+            var eventWidth = Math.round(totalWidth / group.maxCollidingCount),
+                //all events in the same colliding group will have same width according to 2)
+                eventStacks = new Array(group.maxCollidingCount),
+                //store the latest end value of each stack
                 current = group.eventList,
+                groupElm = document.createDocumentFragment(),
                 event,
                 elm,
                 colIndex = 0,
@@ -429,12 +480,14 @@
                     elm.style.left = (containerPaddingLeft + colIndex * eventWidth) + 'px';
                 }
 
-                container.appendChild(elm);
+                groupElm.appendChild(elm);
                 current = current.next;
                 i++;
             }
 
-            return container;
+            container.appendChild(groupElm);
+
+            return groupElm;
         }
 
 
@@ -462,6 +515,47 @@
             return eventElm;
         }
 
+        /*
+            renderTimeIntervals: display times
+        */
+
+        function renderTimeIntervals(container) {
+
+            var elmTime = document.createElement('ul'),
+                ticksCount = Math.ceil((endHour - startHour) * 60 / timeInterval) + 1,
+                i,
+                tickHtml = '',
+                tm = moment(),
+                mins,
+                top;
+
+
+            elmTime.className = 'singleDayCal-times';
+            tm.hour(startHour);
+            tm.minute(0);
+
+            for (i = 0; i < ticksCount; i++) {
+
+                mins = i * timeInterval;
+                top = mins;
+
+                if (mins % 60 === 0) {
+                    tickHtml += '<li style="top: ' + top + 'px"><em>' + tm.format('h:mm') + '</em>' + tm.format('A') + '</li>';
+                } else {
+                    tickHtml += '<li style="top: ' + top + 'px">' + tm.format('h:mm') + '</li>';
+                }
+
+                tm.add('m', timeInterval);
+
+            }
+
+            elmTime.innerHTML = tickHtml;
+            container.appendChild(elmTime);
+
+
+            return elmTime;
+        }
+
 
         /*
             SingleDayCal: public class to load and display a list of events in a single day calendar 
@@ -469,22 +563,32 @@
 
         var SingleDayCal = function(events, container) {
 
-            if (!Array.isArray(events)) {
-                throw new Error('SingleDayCal(): first argument must be an array.')
-            }
-
             this._events = events;
             this._container = container || defaultContainer;
+
+            if (!Array.isArray(this._events)) {
+                throw new Error('SingleDayCal(): argument \'events\' must be an array.')
+            }
+
+            if (!this._container || !this._container.tagName) {
+                throw new Error('SingleDayCal(): argument \'container\' must be a html dom element.')
+            }
+
+
         };
 
         SingleDayCal.prototype = {
 
             layOutDay: function() {
 
-                var elmDay = document.createElement('div');
-                elmDay.className = 'day';
-                this._container.appendChild(elmDay);
-                renderEvents(sortEventsIntoReversedGroups(this._events), elmDay);
+                var wrapper = document.createElement('div');
+
+                wrapper.className = 'singleDayCal';
+                this._container.innerHTML = '';
+                this._container.appendChild(wrapper);
+
+                renderTimeIntervals(wrapper)
+                renderEvents(sortEventsIntoReversedGroups(this._events), wrapper);
 
                 return this;
             }
