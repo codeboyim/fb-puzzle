@@ -12,11 +12,24 @@
     <script src="http://cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js"></script>  
     <script src="//codeorigin.jquery.com/jquery-1.10.2.js"></script> -->
     <script src="/quickSort.js"></script>
+    <script>
+    var GLOBAL_VARS = {};
+    </script>
     <style>
     body {
         color:#797979;
         font-family:'lucida grande', tahoma, verdana, arial, sans-serif;
         font-size:11px;
+    }
+    .singleDayCal {
+        width:;
+    }
+    .day {
+        width:600px;
+        padding: 0 10px;
+        height:720px;
+        position:relative;
+        background-color:#ececec;
     }
     .event {
         position:absolute;
@@ -52,15 +65,6 @@
         margin:6px;
         padding:0;
     }
-    #container {
-    }
-    .day {
-        width:600px;
-        padding: 0 10px;
-        height:720px;
-        position:relative;
-        background-color:#ececec;
-    }
     </style>
     <!--[if lt IE 8]>
     <style>
@@ -69,7 +73,11 @@
         zoom:1;
     }
     </style>
+    <script>
+        GLOBAL_VARS.isLtIE8=true;
+    </script>
     <![endif]-->
+
 </head>
 
 <body>
@@ -134,12 +142,13 @@
         end: 720
     }];
 
+
     var SingleDayCal = (function(exports) {
         'use strict';
-        
+
         var minStart = 0,
             maxEnd = 720,
-            isLtIE8 = document.documentMode && document.documentMode < 8,
+            isLtIE8 = GLOBAL_VARS.isLtIE8 || false,
             eventIEOffset = !isLtIE8 ? null : {
                 x: 4,
                 y: 14
@@ -385,7 +394,7 @@
         function renderGroup(group, totalWidth, containerPaddingLeft, container) {
 
             var eventWidth = Math.round(totalWidth / group.maxCollidingCount), //all events in the same colliding group will have same width according to 2)
-                columns = new Array(group.maxCollidingCount), //store the latest end value of each column
+                eventStacks = new Array(group.maxCollidingCount), //store the latest end value of each stack
                 current = group.eventList,
                 event,
                 elm,
@@ -400,14 +409,14 @@
                 elm = createEventElement(event, eventWidth);
                 colIndex = i % (group.maxCollidingCount);
 
-                if (columns[colIndex] && columns[colIndex] > event.start) {
-                    //to seek another column only if current column doesn't fit
-                    //events should scatter better.
+                if (eventStacks[colIndex] && eventStacks[colIndex] > event.start) {
+                    //only to seek another stack when current stack doesn't fit
+                    //events scatter better and there are less loops.
 
                     for (j = 0; j < group.maxCollidingCount; j++) {
 
-                        if (columns[j] <= event.start) {
-                            columns[j] = event.end;
+                        if (eventStacks[j] <= event.start) {
+                            eventStacks[j] = event.end;
                             elm.style.left = (containerPaddingLeft + j * eventWidth) + 'px';
                             break;
                         }
@@ -416,7 +425,7 @@
 
                 } else {
 
-                    columns[colIndex] = event.end;
+                    eventStacks[colIndex] = event.end;
                     elm.style.left = (containerPaddingLeft + colIndex * eventWidth) + 'px';
                 }
 
@@ -437,8 +446,8 @@
 
             var eventElm,
                 tmpElm,
-                height = event.end - event.start - (eventIEOffset ? eventIEOffset.y : 0);
-            //width = width - (eventIEOffset ? eventIEOffset.x : 0);
+                height = event.end - event.start - (eventIEOffset ? eventIEOffset.y : 0),
+                width = width - (eventIEOffset ? eventIEOffset.x : 0);
 
             tmpElm = document.createElement('div');
             tmpElm.innerHTML = eventTemplate;
@@ -471,6 +480,7 @@
         SingleDayCal.prototype = {
 
             layOutDay: function() {
+
                 var elmDay = document.createElement('div');
                 elmDay.className = 'day';
                 this._container.appendChild(elmDay);
@@ -483,7 +493,7 @@
 
 
         /*
-            layOutDay: public interface to execute SingleDayCal
+            layOutDay: public interface to invoke SingleDayCal class and display events
         */
         exports.layOutDay = function(events) {
 
