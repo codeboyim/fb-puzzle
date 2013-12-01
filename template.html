@@ -516,12 +516,12 @@
         }
 
         /*
-            renderTimeIntervals: display times
+            renderTimeIntervals: display times - axis y
         */
 
         function renderTimeIntervals(container) {
 
-            var elmTime = document.createElement('ul'),
+            var elmTimeTicks = document.createElement('ul'),
                 ticksCount = Math.ceil((endHour - startHour) * 60 / timeInterval) + 1,
                 i,
                 tickHtml = '',
@@ -530,7 +530,7 @@
                 top;
 
 
-            elmTime.className = 'singleDayCal-times';
+            elmTimeTicks.className = 'singleDayCal-times';
             tm.hour(startHour);
             tm.minute(0);
 
@@ -549,11 +549,11 @@
 
             }
 
-            elmTime.innerHTML = tickHtml;
-            container.appendChild(elmTime);
+            elmTimeTicks.innerHTML = tickHtml;
+            container.appendChild(elmTimeTicks);
 
 
-            return elmTime;
+            return elmTimeTicks;
         }
 
 
