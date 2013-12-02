@@ -30,61 +30,15 @@ var SingleDayCal = (function(exports) {
     }
 
 
-    var EventList = function(event) {
-        //a data structure to persist events in the same colliding group
-
-        if (typeof(event) !== 'undefined' && event !== null) {
-
-            if (!isNumeric(event.start) || !isNumeric(event.end)) {
-                throw new Error('EventList: argument \'event\' must have numeric start and end values.');
-            }
-
-            this.event = event;
-            this.next = null;
-        }
-
-    }
-
-    EventList.prototype = {
-
-        add: function(event) {
-
-            var current = this;
-
-            if (typeof(event) === 'undefined' || event === null) {
-                throw new Error('EventList.add(): argument \'event\' must not be undefined or null.');
-            }
-
-            if (!isNumeric(event.start) || !isNumeric(event.end)) {
-                throw new Error('EventList.add(): argument \'event\ must have numeric start and end values.');
-            }
-
-            if (!current.event) {
-
-                current.event = event;
-
-            } else {
-
-                while (current.next) {
-
-                    current = current.next;
-                }
-
-                current.next = {
-                    event: event,
-                    next: null
-                }
-
-            }
-
-            return event;
-        }
-    };
+    //validate and correct 'event' object
 
     function rectifyEvent(event) {
-        //validates and corrects 'event' object
 
         var tmp;
+
+        if (!isNumeric(event.start) || !isNumeric(event.end)) {
+            throw new Error('rectifyEvent: argument \'event\' must have numeric start and end values.');
+        }
 
         if (event.start > event.end) {
             tmp = event.end;
@@ -102,8 +56,10 @@ var SingleDayCal = (function(exports) {
 
     }
 
+    //define compare function for sorting
+
     function compareEvents(event1, event2) {
-        //defines compare function for sorting
+
 
         if (event1.start !== event2.start) {
             return event1.start - event2.start;
@@ -113,16 +69,20 @@ var SingleDayCal = (function(exports) {
 
     }
 
+    //define why event2 (later) collides event1 (earlier)
+
     function collidingEvents(event1, event2) {
-        //defines why event2 (later) collides event1 (earlier)
+
 
         return event2.start < event1.end;
 
     }
 
+    //sort events by starting time and group colliding events and
+    //return reversed groups with latest inserted group in the most front.
+
     function sortAndGroupEvents(events) {
-        //sorts events by starting time and group colliding events and
-        //returns reversed groups with latest inserted group in the most front.
+
 
         var groups = [];
 
@@ -135,56 +95,53 @@ var SingleDayCal = (function(exports) {
         events.forEach(function(event, i) {
 
             var eventAdded = false,
-                collideCount = 0,
-                current,
+                collideCount = 1,
                 groupEvent,
-                group;
+                groupEventsLen,
+                group,
+                j;
 
             rectifyEvent(event);
 
             if (i === 0) {
                 //init a group
                 group = {
-                    eventList: new EventList(event),
                     //store all the indexes of colliding events
-                    maxCollidingCount: 1
+                    events: [event],
                     //store the max number of colliding events of the group. default to 1 if no other event in the same group
+                    maxCollidingCount: 1
                 };
 
                 groups.unshift(group);
 
             } else {
-                
-                group = groups[0];
                 //find last added group
+                group = groups[0];
 
-                current = group.eventList;
-                groupEvent = current.event;
-                collideCount = 1;
+                groupEventsLen = group.events.length;
 
-                while (groupEvent && event != groupEvent) {
-                    //find if colliding with any events in the group
+                for (j = 0; j < groupEventsLen; j++) {
+
+                    groupEvent = group.events[j];
 
                     if (collidingEvents(groupEvent, event)) {
 
                         if (!eventAdded) {
-                            group.eventList.add(event);
+                            group.events.push(event);
                             eventAdded = true;
                         }
 
                         collideCount++;
                     }
 
-                    current = current ? current.next : null;
-                    groupEvent = current ? current.event : null;
-
                 }
+
 
                 if (collideCount === 1) {
                     //no collding happens, create a new group
 
                     group = {
-                        eventList: new EventList(event),
+                        events: [event],
                         maxCollidingCount: 1
                     };
 
@@ -202,8 +159,9 @@ var SingleDayCal = (function(exports) {
         return groups;
     }
 
+    //create and return a 'day' wrapper including all group elements. 
+
     function renderEvents(reversedGroups, container) {
-        //creates and returns a 'day' wrapper including all group elements. 
 
         var containerComputedCss,
             totalWidth,
@@ -231,14 +189,13 @@ var SingleDayCal = (function(exports) {
         return elmDay;
     }
 
+    //create and return a html domcument fragment holding group elements
+
     function createGroupElement(group, totalWidth, containerPaddingLeft) {
-        //creates and returns a html domcument fragment holding group elements
+
 
         var eventWidth = Math.round(totalWidth / group.maxCollidingCount),
-            //all events in the same colliding group will have same width according to 2)
             eventStacks = new Array(group.maxCollidingCount),
-            //store the latest end value of each stack
-            current = group.eventList,
             groupElm = document.createDocumentFragment(),
             event,
             elm,
@@ -246,10 +203,8 @@ var SingleDayCal = (function(exports) {
             i = 0,
             j = 0;
 
+        group.events.forEach(function(event) {
 
-        while (current) {
-
-            event = current.event;
             elm = createEventElement(event, eventWidth);
             colIndex = i % (group.maxCollidingCount);
 
@@ -274,15 +229,16 @@ var SingleDayCal = (function(exports) {
             }
 
             groupElm.appendChild(elm);
-            current = current.next;
             i++;
-        }
+
+        });
 
         return groupElm;
     }
 
+    //create and return a html dom element for 'event' object
+
     function createEventElement(event, width) {
-        //creates and returns a html dom element for 'event' object
 
         var eventElm,
             tmpElm,
@@ -296,14 +252,12 @@ var SingleDayCal = (function(exports) {
         eventElm.style.width = width + 'px';
         eventElm.firstChild.style.height = height > 0 ? (height + 'px') : 0;
 
-        //TO REMOVE
-        eventElm.setAttribute('title', event.start + ' - ' + event.end);
-
         return eventElm;
     }
 
+    //display times - axis y
+
     function renderTimeIntervals(container) {
-        //displays times - axis y
 
         var elmTimeTicks = document.createElement('ul'),
             ticksCount = Math.ceil((endHour - startHour) * 60 / timeInterval) + 1,
@@ -340,8 +294,10 @@ var SingleDayCal = (function(exports) {
         return elmTimeTicks;
     }
 
+
+    //a public class to load and display a list of events in a single day calendar 
+
     var SingleDayCal = function(events, container) {
-        //a public class to load and display a list of events in a single day calendar 
 
         this._events = events;
         this._container = container || defaultContainer;
