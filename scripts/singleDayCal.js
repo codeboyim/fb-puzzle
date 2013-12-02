@@ -17,23 +17,22 @@ var SingleDayCal = (function(exports) {
         defaultContainer = document.getElementById('container'),
         eventTemplate = '<div class="singleDayCal-event"><div class="content"><h2 class="header">Sample Item</h2><p class="body">Sample Location</p></div></div>';
 
-    /*
-        helper functions
-    */
+
+    //get live style of elm 
 
     function getComputedStyle(elm) {
         return window.getComputedStyle ? window.getComputedStyle(elm) : elm.currentStyle;
     }
 
+    //varify numeric input
+
     function isNumeric(n) {
         return !isNaN(parseFloat(n)) && isFinite(n);
     }
 
-
     //validate and correct 'event' object
 
     function rectifyEvent(event) {
-
         var tmp;
 
         if (!isNumeric(event.start) || !isNumeric(event.end)) {
@@ -60,7 +59,6 @@ var SingleDayCal = (function(exports) {
 
     function compareEvents(event1, event2) {
 
-
         if (event1.start !== event2.start) {
             return event1.start - event2.start;
         } else {
@@ -72,18 +70,13 @@ var SingleDayCal = (function(exports) {
     //define why event2 (later) collides event1 (earlier)
 
     function collidingEvents(event1, event2) {
-
-
         return event2.start < event1.end;
-
     }
 
     //sort events by starting time and group colliding events and
     //return reversed groups with latest inserted group in the most front.
 
     function sortAndGroupEvents(events) {
-
-
         var groups = [];
 
         if (!Array.isArray(events) || !events.length) {
@@ -93,7 +86,6 @@ var SingleDayCal = (function(exports) {
         events.sort(compareEvents);
 
         events.forEach(function(event, i) {
-
             var eventAdded = false,
                 collideCount = 1,
                 groupEvent,
@@ -111,13 +103,11 @@ var SingleDayCal = (function(exports) {
                     //store the max number of colliding events of the group. default to 1 if no other event in the same group
                     maxCollidingCount: 1
                 };
-
                 groups.unshift(group);
 
             } else {
                 //find last added group
                 group = groups[0];
-
                 groupEventsLen = group.events.length;
 
                 for (j = 0; j < groupEventsLen; j++) {
@@ -127,8 +117,10 @@ var SingleDayCal = (function(exports) {
                     if (collidingEvents(groupEvent, event)) {
 
                         if (!eventAdded) {
+
                             group.events.push(event);
                             eventAdded = true;
+
                         }
 
                         collideCount++;
@@ -136,33 +128,28 @@ var SingleDayCal = (function(exports) {
 
                 }
 
-
                 if (collideCount === 1) {
                     //no collding happens, create a new group
-
                     group = {
                         events: [event],
                         maxCollidingCount: 1
                     };
-
                     groups.unshift(group);
 
                 } else if (collideCount > group.maxCollidingCount) {
-
                     group.maxCollidingCount = collideCount;
-
                 }
 
             }
+
         });
 
         return groups;
     }
 
-    //create and return a 'day' wrapper including all group elements. 
+    //render and return a 'day' wrapper including all group elements. 
 
     function renderEvents(reversedGroups, container) {
-
         var containerComputedCss,
             totalWidth,
             containerPaddingLeft,
@@ -171,28 +158,27 @@ var SingleDayCal = (function(exports) {
             groupWrapper,
             elmDay = document.createElement('div');
 
-
         elmDay.className = 'singleDayCal-day';
         container.appendChild(elmDay);
 
         containerComputedCss = getComputedStyle(elmDay);
         totalWidth = parseInt(containerComputedCss.width) || 0;
         containerPaddingLeft = parseInt(containerComputedCss.paddingLeft) || 0;
+
         reversedGroups = !Array.isArray(reversedGroups) ? [] : reversedGroups;
         groupsLen = reversedGroups.length;
 
         for (i = groupsLen - 1; i >= 0; i--) {
-
             elmDay.appendChild(createGroupElement(reversedGroups[i], totalWidth, containerPaddingLeft));
         }
 
         return elmDay;
+
     }
 
     //create and return a html domcument fragment holding group elements
 
     function createGroupElement(group, totalWidth, containerPaddingLeft) {
-
 
         var eventWidth = Math.round(totalWidth / group.maxCollidingCount),
             eventStacks = new Array(group.maxCollidingCount),
@@ -204,7 +190,6 @@ var SingleDayCal = (function(exports) {
             j = 0;
 
         group.events.forEach(function(event) {
-
             elm = createEventElement(event, eventWidth);
             colIndex = i % (group.maxCollidingCount);
 
@@ -223,7 +208,6 @@ var SingleDayCal = (function(exports) {
                 }
 
             } else {
-
                 eventStacks[colIndex] = event;
                 elm.style.left = (containerPaddingLeft + colIndex * eventWidth) + 'px';
             }
@@ -239,7 +223,6 @@ var SingleDayCal = (function(exports) {
     //create and return a html dom element for 'event' object
 
     function createEventElement(event, width) {
-
         var eventElm,
             tmpElm,
             height = event.end - event.start - (eventIEOffset ? eventIEOffset.y : 0),
@@ -247,6 +230,7 @@ var SingleDayCal = (function(exports) {
 
         tmpElm = document.createElement('div');
         tmpElm.innerHTML = eventTemplate;
+
         eventElm = tmpElm.firstChild;
         eventElm.style.top = event.start + 'px';
         eventElm.style.width = width + 'px';
@@ -258,7 +242,6 @@ var SingleDayCal = (function(exports) {
     //display times - axis y
 
     function renderTimeIntervals(container) {
-
         var elmTimeTicks = document.createElement('ul'),
             ticksCount = Math.ceil((endHour - startHour) * 60 / timeInterval) + 1,
             i,
@@ -267,13 +250,11 @@ var SingleDayCal = (function(exports) {
             mins,
             top;
 
-
         elmTimeTicks.className = 'singleDayCal-times';
         tm.hour(startHour);
         tm.minute(0);
 
         for (i = 0; i < ticksCount; i++) {
-
             mins = i * timeInterval;
             top = mins;
 
@@ -284,12 +265,10 @@ var SingleDayCal = (function(exports) {
             }
 
             tm.add('m', timeInterval);
-
         }
 
         elmTimeTicks.innerHTML = tickHtml;
         container.appendChild(elmTimeTicks);
-
 
         return elmTimeTicks;
     }
@@ -299,23 +278,22 @@ var SingleDayCal = (function(exports) {
 
     var SingleDayCal = function(events, container) {
 
-        this._events = events;
-        this._container = container || defaultContainer;
-
-        if (!Array.isArray(this._events)) {
+        if (!Array.isArray(events)) {
             throw new Error('SingleDayCal(): argument \'events\' must be an array.')
         }
 
-        if (!this._container || !this._container.tagName) {
+        if (container && !container.tagName) {
             throw new Error('SingleDayCal(): argument \'container\' must be a html dom element.')
         }
+
+        this._events = events;
+        this._container = container || defaultContainer;
 
     };
 
     SingleDayCal.prototype = {
 
         layOutDay: function() {
-
             var wrapper = document.createElement('div');
 
             wrapper.className = 'singleDayCal';
@@ -331,5 +309,4 @@ var SingleDayCal = (function(exports) {
     }
 
     return SingleDayCal;
-
 })(this);
