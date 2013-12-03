@@ -291,7 +291,7 @@ var SingleDayCal = (function(exports) {
         layOutDay: function() {
             var wrapper = document.createElement('div');
 
-            wrapper.className = 'singleDayCal';
+            wrapper.className = 'singleDayCal clearfix';
             this._container.innerHTML = '';
             this._container.appendChild(wrapper);
 

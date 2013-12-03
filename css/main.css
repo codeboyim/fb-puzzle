@@ -2,6 +2,15 @@ body {
     font-family:'lucida grande', tahoma, verdana, arial, sans-serif;
     font-size:11px;
 }
+.clearfix:after {
+    content:'.';
+    clear:both;
+    display:block;
+    visibility: hidden;
+    height:0;
+    line-height:0;
+    font-size:0;
+}
 #container {
     padding:10px;
 }

@@ -1,14 +1,5 @@
 .singleDayCal {
-    display:inline-block;
     color:#797979;
-}
-.singleDayCal:after {
-    content:'.';
-    clear:both;
-    display:block;
-    visibility: hidden;
-    height:0;
-    line-height:0;
 }
 .singleDayCal-day {
     width:600px;
