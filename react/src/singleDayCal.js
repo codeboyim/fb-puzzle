@@ -247,7 +247,7 @@
             var events = this.props.events;
 
             return (
-                <div className="singleDayCal">
+                <div className="singleDayCal clearfix">
                     <TimeAxis />
                     <CalendarDayBlock groups={sortAndGroupEvents(events)} />
                 </div>

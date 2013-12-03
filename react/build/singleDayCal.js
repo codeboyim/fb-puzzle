@@ -247,7 +247,7 @@
             var events = this.props.events;
 
             return (
-                React.DOM.div( {className:"singleDayCal"}, 
+                React.DOM.div( {className:"singleDayCal clearfix"}, 
                     TimeAxis(null ),
                     CalendarDayBlock( {groups:sortAndGroupEvents(events)} )
                 )
