@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Puzzle - Single Day Calendar</title>
+
+    <link rel="stylesheet" href="../css/reset.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/singleDayCal.css">
+    <script>
+    var GLOBAL_VARS = {};
+    </script>
+    <!--[if lt IE 8]>
+    <style>
+    .singleDayCal {
+        display:inline-block;
+    }
+    * html .singleDayCal-event {
+        height:1%;
+    }
+    </style>
+    <script>
+        GLOBAL_VARS.isLtIE8=true;
+    </script>
+    <![endif]-->
+
+</head>
+
+<body>
+    <div id="container">
+    </div>
+    <!-- scripts start -->
+    <script src="../scripts/lib/es5-shim.min.js"></script>
+    <script src="../scripts/lib/moment.min.js"></script>
+    <script src="build/react.min.js"></script>
+    <script src="build/singleDayCal.js"></script>
+    <script>
+    var sampleEvents = [{
+        start: 30,
+        end: 150
+    }, {
+        start: 540,
+        end: 600
+    }, {
+        start: 560,
+        end: 620
+    }, {
+        start: 610,
+        end: 670
+    }];
+
+    layOutDay(sampleEvents);
+    </script>
+    <!-- end scripts -->
+</body>
+
+</html>
