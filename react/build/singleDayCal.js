@@ -2,6 +2,13 @@
 
 (function(exports){
 
+    var isLtIE8 = !! GLOBAL_VARS.isLtIE8,
+        eventIEOffset = !isLtIE8 ? null : {
+            // offset for width/height in IE 6/7
+            x: 4,
+            y: 2
+    }
+
     function isNumeric(n) {
         return !isNaN(parseFloat(n)) && isFinite(n);
     }
