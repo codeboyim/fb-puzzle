@@ -181,15 +181,12 @@ var SingleDayCal = (function(exports) {
 
         var eventWidth = Math.round(totalWidth / group.maxCollidingCount),
             eventStacks = new Array(group.maxCollidingCount),
-            groupElm = document.createDocumentFragment(),
-            event,
-            elm,
+            groupElm = document.createDocumentFragment(),            
             colIndex = 0,
-            i = 0,
             j = 0;
 
-        group.events.forEach(function(event) {
-            elm = createEventElement(event, eventWidth);
+        group.events.forEach(function(event, i) {
+            var elm = createEventElement(event, eventWidth);
             colIndex = i % (group.maxCollidingCount);
 
             if (eventStacks[colIndex] && collidingEvents(eventStacks[colIndex], event)) {
@@ -212,7 +209,6 @@ var SingleDayCal = (function(exports) {
             }
 
             groupElm.appendChild(elm);
-            i++;
 
         });
 
