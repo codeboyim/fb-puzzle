@@ -173,7 +173,6 @@ var SingleDayCal = (function(exports) {
         }
 
         return elmDay;
-
     }
 
     //create and return a html domcument fragment holding group elements
