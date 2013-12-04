@@ -23,7 +23,7 @@
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
 }
-.singleDayCal-event .content {
+.singleDayCal-event > article, .singleDayCal-event > .article {
     background-color:white;
     overflow:auto;
     border:solid 1px #d5d5d5;
@@ -32,16 +32,16 @@
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
 }
-.singleDayCal-event .header {
+.singleDayCal-event > article > header, .singleDayCal-event > .article > .header  {
+    margin:5px 0 0 5px;
+}
+.singleDayCal-event > article > section, .singleDayCal-event > .article > .section {
+    margin-left:5px;
+}
+.singleDayCal-event h1 {
     color:#4b6ea8;
     font-size:12px;
     font-weight:bold;
-    margin:5px 0 0 5px;
-    padding:0;
-}
-.singleDayCal-event .body {
-    font-size:9px;
-    margin:0 5px;
     padding:0;
 }
 .singleDayCal-times {

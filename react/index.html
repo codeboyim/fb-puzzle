@@ -4,13 +4,14 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Puzzle - Single Day Calendar</title>
+    <meta name="viewport" content="initial-scale=1">
+    <title>Puzzle - Single Day Calendar (Reacted!)</title>
 
     <link rel="stylesheet" href="../css/reset.css">
     <link rel="stylesheet" href="../css/main.css">
     <link rel="stylesheet" href="../css/singleDayCal.css">
     <script>
-    var GLOBAL_VARS = {};
+    var GLOBAL_VARS = {isLtIE8:false};
     </script>
     <!--[if lt IE 8]>
     <style>
@@ -22,7 +23,6 @@
         GLOBAL_VARS.isLtIE8=true;
     </script>
     <![endif]-->
-
 </head>
 
 <body>
@@ -35,7 +35,7 @@
     <script src="build/react.min.js"></script>
     <script src="build/singleDayCal.js"></script>
     <script>
-    var sampleEvents = [{
+    var initEvents = [{
         start: 30,
         end: 150
     }, {
@@ -49,7 +49,7 @@
         end: 670
     }];
 
-    layOutDay(sampleEvents);
+    layOutDay(initEvents);
     </script>
     <!-- end scripts -->
 </body>

@@ -15,7 +15,7 @@ var SingleDayCal = (function(exports) {
             y: 2
         },
         defaultContainer = document.getElementById('container'),
-        eventTemplate = '<div class="singleDayCal-event"><div class="content"><h2 class="header">Sample Item</h2><p class="body">Sample Location</p></div></div>';
+        eventTemplate = '<div class="singleDayCal-event"><article><header><h1>Sample Item</h1><p>Sample Location</p></header><section></section></article></div>';
 
 
     //get live style of elm 

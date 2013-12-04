@@ -2,13 +2,6 @@
 
 (function(exports){
 
-    var isLtIE8 = !! GLOBAL_VARS.isLtIE8,
-        eventIEOffset = !isLtIE8 ? null : {
-            // offset for width/height in IE 6/7
-            x: 4,
-            y: 2
-    }
-
     function isNumeric(n) {
         return !isNaN(parseFloat(n)) && isFinite(n);
     }
@@ -161,9 +154,7 @@
             return (
                 React.DOM.div( {className:"singleDayCal-day"}, 
                     eventBlocks.map(function(eventProp){
-
                         return EventBlock( {event:eventProp.event, left:eventProp.left, width:eventProp.width} )
-
                     })
                 )
             );
@@ -172,7 +163,6 @@
 
     });
 
-
     var EventBlock = React.createClass({displayName: 'EventBlock',
 
         render: function(){
@@ -180,14 +170,19 @@
             var event = this.props.event,
                 width= this.props.width,
                 left = this.props.left,
-                eventStyle = {top: event.start, width: width, left: left},
-                contentStyle={height:event.end-event.start};
+                eventStyle = {top: event.start, width: width-(GLOBAL_VARS.isLtIE8?4:0), left: left},
+                contentStyle={height:event.end-event.start-(GLOBAL_VARS.isLtIE8?2:0)};
 
             return (
+                //since it seems React is struggling to render the HTML5 elements properly in IE8 and below
+                //divs is used instead.
                 React.DOM.div( {className:"singleDayCal-event", style:eventStyle}, 
-                    React.DOM.div( {className:"content", style:contentStyle}, 
-                        React.DOM.h2( {className:"header"}, "Sample Item"),
-                        React.DOM.p( {className:"body"}, "Sample Location")
+                    React.DOM.div( {className:"article", style:contentStyle}, 
+                        React.DOM.div( {className:"header"}, 
+                            React.DOM.h1(null, "Sample Item"),
+                            React.DOM.p(null, "Sample Location")
+                        ),
+                        React.DOM.div( {className:"section"})
                     )
                 )
             );
