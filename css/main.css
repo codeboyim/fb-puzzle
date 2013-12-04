@@ -13,4 +13,6 @@ body {
 }
 #container {
     padding:10px;
+    width:706px;
+    margin:10px auto;
 }
