@@ -237,32 +237,38 @@ var SingleDayCal = (function(exports) {
 
     //a public class to load and display a list of events in a single day calendar 
 
-    var SingleDayCal = function(events, container) {
-
-        if (!Array.isArray(events)) {
-            throw new Error('SingleDayCal(): argument \'events\' must be an array.')
-        }
+    var SingleDayCal = function(container, events) {
 
         if (!container || !container.tagName) {
             throw new Error('SingleDayCal(): argument \'container\' must be a html dom element.')
         }
 
-        this._events = events;
-        this._container = container;
+        if (events && !Array.isArray(events)) {
+            throw new Error('SingleDayCal(): argument \'events\' must be an array.')
+        }
 
+        this._events = events;
+        this._wrapper = document.createElement('div');
+        this._wrapper.className = 'singleDayCal clearfix';
+        this._timeIntervalsRendered = false;
+        container.innerHTML = '';
+        container.appendChild(this._wrapper);
     };
 
     SingleDayCal.prototype = {
 
-        layOutDay: function() {
-            var wrapper = document.createElement('div');
+        layOutDay: function(events) {
 
-            wrapper.className = 'singleDayCal clearfix';
-            this._container.innerHTML = '';
-            this._container.appendChild(wrapper);
+            if (events && !Array.isArray(events)) {
+                throw new Error('SingleDayCal(): argument \'events\' must be an array.')
+            }
 
-            renderTimeIntervals(wrapper)
-            renderEvents(this._events, wrapper);
+            if (!this._timeIntervalsRendered) {
+                renderTimeIntervals(this._wrapper);
+                this._timeIntervalsRendered = true;
+            }
+            
+            renderEvents(events || this._events, this._wrapper);
 
             return this;
         }

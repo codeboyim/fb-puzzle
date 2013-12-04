@@ -1,16 +1,11 @@
 /*main.js*/
 
 (function(exports) {
-
+    var cal = new SingleDayCal(document.getElementById('container'));
     //a public interface to invoke SingleDayCal class and display events
     exports.layOutDay = function(events) {
-        var cal;
-        
         events = events || [];
-        
-        cal = new SingleDayCal(events, document.getElementById('container'));
-
-        cal.layOutDay();
+        cal.layOutDay(events);
 
         return events.length;
     }
