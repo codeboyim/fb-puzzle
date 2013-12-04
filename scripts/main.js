@@ -11,6 +11,7 @@
         return events.length;
     }
 
+    //load init events
     var initEvents = [{
         start: 30,
         end: 150
