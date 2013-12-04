@@ -165,14 +165,12 @@ var SingleDayCal = (function(exports) {
         groups.forEach(function(group) {
             var eventWidth = Math.round(maxWidth / group.maxCollidingCount),
                 eventStacks = new Array(group.maxCollidingCount),
-                groupElm = document.createDocumentFragment(),
-                colIndex = 0;
+                groupElm = document.createDocumentFragment();
 
             group.events.forEach(function(event, i) {
                 var j,
-                    left;
-
-                colIndex = i % (group.maxCollidingCount);
+                    left,
+                    colIndex = i % (group.maxCollidingCount);
 
                 if (eventStacks[colIndex] && collidingEvents(eventStacks[colIndex], event)) {
                     //only to seek another stack when current stack doesn't fit
