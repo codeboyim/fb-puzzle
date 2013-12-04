@@ -4,7 +4,7 @@
 
     //a public interface to invoke SingleDayCal class and display events
     exports.layOutDay = function(events) {
-        var cal = new SingleDayCal(events);
+        var cal = new SingleDayCal(events, document.getElementById('container'));
 
         cal.layOutDay();
 
