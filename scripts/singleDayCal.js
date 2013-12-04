@@ -7,9 +7,8 @@ var SingleDayCal = (function(exports) {
         maxEnd = 720,
         startHour = 9,
         endHour = 21,
-        timeInterval = 30,
-        isLtIE8 = !! GLOBAL_VARS.isLtIE8,
-        eventIEOffset = !isLtIE8 ? null : {
+        timeInterval = 30,        
+        eventIEOffset = ! GLOBAL_VARS.isLtIE8 ? null : {
             // offset for width/height in IE 6/7
             x: 4,
             y: 2
@@ -88,10 +87,7 @@ var SingleDayCal = (function(exports) {
         events.forEach(function(event, i) {
             var eventAdded = false,
                 collideCount = 1,
-                groupEvent,
-                groupEventsLen,
-                group,
-                j;
+                group;
 
             rectifyEvent(event);
 
@@ -103,37 +99,35 @@ var SingleDayCal = (function(exports) {
                     //store the max number of colliding events of the group. default to 1 if no other event in the same group
                     maxCollidingCount: 1
                 };
+
                 groups.unshift(group);
 
             } else {
                 //find last added group
                 group = groups[0];
-                groupEventsLen = group.events.length;
 
-                for (j = 0; j < groupEventsLen; j++) {
-
+                group.events.forEach(function(groupEvent, j){
                     groupEvent = group.events[j];
 
                     if (collidingEvents(groupEvent, event)) {
 
                         if (!eventAdded) {
-
                             group.events.push(event);
                             eventAdded = true;
-
                         }
 
                         collideCount++;
                     }
 
-                }
-
+                })
+                
                 if (collideCount === 1) {
                     //no collding happens, create a new group
                     group = {
                         events: [event],
                         maxCollidingCount: 1
                     };
+
                     groups.unshift(group);
 
                 } else if (collideCount > group.maxCollidingCount) {
@@ -182,11 +176,12 @@ var SingleDayCal = (function(exports) {
         var eventWidth = Math.round(totalWidth / group.maxCollidingCount),
             eventStacks = new Array(group.maxCollidingCount),
             groupElm = document.createDocumentFragment(),            
-            colIndex = 0,
-            j = 0;
+            colIndex = 0;            
 
         group.events.forEach(function(event, i) {
-            var elm = createEventElement(event, eventWidth);
+            var j,
+                left;
+
             colIndex = i % (group.maxCollidingCount);
 
             if (eventStacks[colIndex] && collidingEvents(eventStacks[colIndex], event)) {
@@ -197,7 +192,7 @@ var SingleDayCal = (function(exports) {
 
                     if (!collidingEvents(eventStacks[j], event)) {
                         eventStacks[j] = event;
-                        elm.style.left = (containerPaddingLeft + j * eventWidth) + 'px';
+                        left = containerPaddingLeft + j * eventWidth;
                         break;
                     }
 
@@ -205,10 +200,10 @@ var SingleDayCal = (function(exports) {
 
             } else {
                 eventStacks[colIndex] = event;
-                elm.style.left = (containerPaddingLeft + colIndex * eventWidth) + 'px';
+                left = containerPaddingLeft + colIndex * eventWidth;
             }
 
-            groupElm.appendChild(elm);
+            groupElm.appendChild(createEventElement(event, eventWidth, left));
 
         });
 
@@ -217,7 +212,7 @@ var SingleDayCal = (function(exports) {
 
     //create and return a html dom element for 'event' object
 
-    function createEventElement(event, width) {
+    function createEventElement(event, width, left) {
         var eventElm,
             tmpElm,
             height = event.end - event.start - (eventIEOffset ? eventIEOffset.y : 0),
@@ -228,6 +223,7 @@ var SingleDayCal = (function(exports) {
 
         eventElm = tmpElm.firstChild;
         eventElm.style.top = event.start + 'px';
+        eventElm.style.left = left + 'px';
         eventElm.style.width = width + 'px';
         eventElm.firstChild.style.height = height > 0 ? (height + 'px') : 0;
 

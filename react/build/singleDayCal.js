@@ -1,6 +1,7 @@
 /** @jsx React.DOM */
 
 (function(exports){
+    'use strict';
 
     function isNumeric(n) {
         return !isNaN(parseFloat(n)) && isFinite(n);

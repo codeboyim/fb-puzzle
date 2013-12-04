@@ -11,7 +11,7 @@
         return events.length;
     }
 
-    var sampleEvents = [{
+    var initEvents = [{
         start: 30,
         end: 150
     }, {
@@ -25,6 +25,6 @@
         end: 670
     }];
 
-    layOutDay(sampleEvents);
+    layOutDay(initEvents);
 
 })(this);
