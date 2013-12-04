@@ -155,11 +155,15 @@ var SingleDayCal = (function(exports) {
 
     //render all grouped events
 
-    function renderEvents(events, parentElm) {
-        var elmDay = document.createElement('div'),
-            groups = sortAndGroupEvents(events);
+    function renderEvents(events, parentElm, dayElm) {
+        var groups = sortAndGroupEvents(events);
 
-        elmDay.className = 'singleDayCal-day';
+        if (!dayElm) {
+            dayElm = document.createElement('div');
+            dayElm.className = 'singleDayCal-day';
+        } else {
+            dayElm.innerHTML = '';
+        }
 
         groups.forEach(function(group) {
             var eventWidth = Math.round(maxWidth / group.maxCollidingCount),
@@ -190,20 +194,20 @@ var SingleDayCal = (function(exports) {
                     left = colIndex * eventWidth;
                 }
 
-                elmDay.appendChild(createEventElement(event, eventWidth, left));
+                dayElm.appendChild(createEventElement(event, eventWidth, left));
             });
 
         });
 
-        parentElm.appendChild(elmDay);
+        parentElm.appendChild(dayElm);
 
-        return elmDay;
+        return dayElm;
     }
 
     //display times - axis y
 
     function renderTimeIntervals(parentElm) {
-        var elmTimeTicks = document.createElement('ul'),
+        var timeTicksElm = document.createElement('ul'),
             ticksCount = Math.ceil((endHour - startHour) * 60 / timeInterval) + 1,
             i,
             tickHtml = '',
@@ -211,7 +215,7 @@ var SingleDayCal = (function(exports) {
             mins,
             top;
 
-        elmTimeTicks.className = 'singleDayCal-times';
+        timeTicksElm.className = 'singleDayCal-times';
         tm.hour(startHour);
         tm.minute(0);
 
@@ -228,10 +232,10 @@ var SingleDayCal = (function(exports) {
             tm.add('m', timeInterval);
         }
 
-        elmTimeTicks.innerHTML = tickHtml;
-        parentElm.appendChild(elmTimeTicks);
+        timeTicksElm.innerHTML = tickHtml;
+        parentElm.appendChild(timeTicksElm);
 
-        return elmTimeTicks;
+        return timeTicksElm;
     }
 
 
@@ -249,8 +253,9 @@ var SingleDayCal = (function(exports) {
 
         this._events = events;
         this._wrapper = document.createElement('div');
-        this._wrapper.className = 'singleDayCal clearfix';
-        this._timeIntervalsRendered = false;
+        this._wrapper.className = 'singleDayCal';
+        this._timeIntevalsWrapper = null;
+        this._eventsWrapper = null;
         container.innerHTML = '';
         container.appendChild(this._wrapper);
     };
@@ -263,12 +268,11 @@ var SingleDayCal = (function(exports) {
                 throw new Error('SingleDayCal(): argument \'events\' must be an array.')
             }
 
-            if (!this._timeIntervalsRendered) {
-                renderTimeIntervals(this._wrapper);
-                this._timeIntervalsRendered = true;
+            if (!this._timeIntevalsWrapper) {
+                this._timeIntevalsWrapper = renderTimeIntervals(this._wrapper);
             }
-            
-            renderEvents(events || this._events, this._wrapper);
+
+            this._eventsWrapper = renderEvents(events || this._events, this._wrapper, this._eventsWrapper);
 
             return this;
         }

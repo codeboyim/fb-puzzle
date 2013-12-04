@@ -244,7 +244,7 @@
             var events = this.props.events;
 
             return (
-                <div className="singleDayCal clearfix">
+                <div className="singleDayCal">
                     <TimeAxis />
                     <CalendarDayBlock groups={sortAndGroupEvents(events)} />
                 </div>
@@ -255,11 +255,13 @@
     });
 
     exports.layOutDay = function(events) {
+        events = events || [];
 
         React.renderComponent(
             <SingleDayCal events={events} />,
             document.getElementById('container')
         );
 
+        return events.length;
     }
 })(this);
