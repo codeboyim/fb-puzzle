@@ -30,11 +30,8 @@
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
 }
-.singleDayCal-event > article > header, .singleDayCal-event > .article > .header  {
-    margin:5px 0 0 5px;
-}
-.singleDayCal-event > article > section, .singleDayCal-event > .article > .section {
-    margin-left:5px;
+.singleDayCal-event > article > header, .singleDayCal-event > .article > .header, .singleDayCal-event > article > section, .singleDayCal-event > .article > .section {
+    margin:8px;
 }
 .singleDayCal-event h1 {
     color:#4b6ea8;
