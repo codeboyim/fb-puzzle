@@ -66,7 +66,7 @@ var SingleDayCal = (function(exports) {
         return event2.start < event1.end;
     }
 
-    //sort events by starting time and group colliding events and
+    //sort events by starting time and group colliding events,
     //return groups with latest inserted group in the front.
 
     function sortAndGroupEvents(events) {
@@ -205,7 +205,7 @@ var SingleDayCal = (function(exports) {
 
     //display times - axis y
 
-    function renderTimeIntervals(container) {
+    function renderTimeIntervals(attachToElm) {
         var elmTimeTicks = document.createElement('ul'),
             ticksCount = Math.ceil((endHour - startHour) * 60 / timeInterval) + 1,
             i,
@@ -232,7 +232,7 @@ var SingleDayCal = (function(exports) {
         }
 
         elmTimeTicks.innerHTML = tickHtml;
-        container.appendChild(elmTimeTicks);
+        attachToElm.appendChild(elmTimeTicks);
 
         return elmTimeTicks;
     }
