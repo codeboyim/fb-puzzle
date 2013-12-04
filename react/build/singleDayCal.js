@@ -70,9 +70,10 @@
                     maxCollidingCount: 1
                 };
 
-                groups.unshift(group);
+                groups.push(group);
+
             } else {
-                group = groups[0];
+                group = groups[groups.length-1];
                 groupEventsLen = group.events.length;
 
                 for (j = 0; j < groupEventsLen; j++) {
@@ -98,7 +99,8 @@
                         maxCollidingCount: 1
                     };
 
-                    groups.unshift(group);
+                    groups.push(group);
+
                 } else if (collideCount > group.maxCollidingCount) {
                     group.maxCollidingCount = collideCount;
                 }

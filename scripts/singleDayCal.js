@@ -17,7 +17,7 @@ var SingleDayCal = (function(exports) {
         eventTemplate = '<div class="singleDayCal-event"><article><header><h1>Sample Item</h1><p>Sample Location</p></header><section></section></article></div>';
 
 
-    //varify numeric input
+    //validate numeric input
 
     function isNumeric(n) {
         return !isNaN(parseFloat(n)) && isFinite(n);
@@ -66,8 +66,7 @@ var SingleDayCal = (function(exports) {
         return event2.start < event1.end;
     }
 
-    //sort events by starting time and group colliding events,
-    //return groups with latest inserted group in the front.
+    //sort events by starting time and group colliding events
 
     function sortAndGroupEvents(events) {
         var groups = [];
@@ -94,11 +93,11 @@ var SingleDayCal = (function(exports) {
                     maxCollidingCount: 1
                 };
 
-                groups.unshift(group);
+                groups.push(group);
 
             } else {
                 //find last added group
-                group = groups[0];
+                group = groups[groups.length - 1];
 
                 group.events.forEach(function(groupEvent) {
 
@@ -121,7 +120,7 @@ var SingleDayCal = (function(exports) {
                         maxCollidingCount: 1
                     };
 
-                    groups.unshift(group);
+                    groups.push(group);
 
                 } else if (collideCount > group.maxCollidingCount) {
                     group.maxCollidingCount = collideCount;
@@ -197,7 +196,7 @@ var SingleDayCal = (function(exports) {
         });
 
         parentElm.appendChild(elmDay);
-        
+
         return elmDay;
     }
 
