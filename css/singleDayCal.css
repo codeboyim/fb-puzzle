@@ -1,5 +1,7 @@
 .singleDayCal {
     color:#797979;
+    padding:10px;
+    display:inline-block;
 }
 .singleDayCal-day {
     width:600px;
