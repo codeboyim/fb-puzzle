@@ -28,70 +28,109 @@
     <!--[if lt IE 9]>
     <script src="scripts/lib/html5shiv.js"></script>
     <![endif]-->
+    <style>
+    .container {
+        margin: 10px;
+    }
+    </style>
 </head>
 
 <body>
-    <div id="container">
+    <div id="c1" class="container">
     </div>
-
+    <div id="c2" class="container">
+    </div>
+    <div id="c3" class="container">
+    </div>
     <script src="../scripts/lib/es5-shim.min.js"></script>
     <script src="../scripts/lib/moment.min.js"></script>
     <script src="../scripts/singleDayCal.js"></script>
     <script>
-
     /*Test Case 1*/
-    var events = [{
+    var cal1 = new SingleDayCal(document.getElementById('c1'), [{
         start: 80,
         end: 150
-        }, {
-            start: 260,
-            end: 280
-        }, {
-            start: 80,
-            end: 140
-        }, {
-            start: 210,
-            end: 250
-        }, {
-            start: 210,
-            end: 220
-        }, {
-            start: 165,
-            end: 180
-        }, {
-            start: 160,
-            end: 200
-        }, {
-            start: 180,
-            end: 220
-        }, {
-            start: 175,
-            end: 270
-        }, {
-            start: 240,
-            end: 250
-        }, {
-            start: 180,
-            end: 200
-        }, {
-            start: 350,
-            end: 500
-        }, {
-            start: 400,
-            end: 500
-        }, {
-            start: 550,
-            end: 600
-        }, {
-            start: 580,
-            end: 650
-        }, {
-            start: 590,
-            end: 720
-        }],
-        cal = new SingleDayCal(document.getElementById('container'), events);
+    }, {
+        start: 260,
+        end: 280
+    }, {
+        start: 80,
+        end: 140
+    }, {
+        start: 210,
+        end: 250
+    }, {
+        start: 210,
+        end: 220
+    }, {
+        start: 165,
+        end: 180
+    }, {
+        start: 160,
+        end: 200
+    }, {
+        start: 180,
+        end: 220
+    }, {
+        start: 175,
+        end: 270
+    }, {
+        start: 240,
+        end: 250
+    }, {
+        start: 180,
+        end: 200
+    }, {
+        start: 350,
+        end: 500
+    }, {
+        start: 400,
+        end: 500
+    }, {
+        start: 550,
+        end: 600
+    }, {
+        start: 580,
+        end: 650
+    }, {
+        start: 590,
+        end: 720
+    }]);
 
-        cal.layOutDay();
+    cal1.layOutDay();
+
+    /*Test Case 2*/
+    var cal2 = new SingleDayCal(document.getElementById('c2'));
+
+    function genEvents(n) {
+        var results = [],
+            i = 0,
+            start,
+            end;
+
+        for (i = 0; i < n; i++) {
+            start = Math.round(Math.random() * 721) - 1;
+            end = Math.round(Math.random() * 721) - 1;
+
+            if (start < end) {
+                results.push({
+                    start: start,
+                    end: end
+                });
+            } else {
+                results.push({
+                    start: end,
+                    end: start
+                });
+            }
+        }
+
+        return results;
+    }
+
+    setInterval(function() {
+        cal2.layOutDay(genEvents(Math.random() * 30));
+    }, 2000);
     </script>
 </body>
 
