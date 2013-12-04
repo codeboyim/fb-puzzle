@@ -5,23 +5,17 @@ var SingleDayCal = (function(exports) {
 
     var minStart = 0,
         maxEnd = 720,
+        maxWidth = 600,
         startHour = 9,
         endHour = 21,
-        timeInterval = 30,        
-        eventIEOffset = ! GLOBAL_VARS.isLtIE8 ? null : {
+        timeInterval = 30,
+        eventIEOffset = !GLOBAL_VARS.isLtIE8 ? null : {
             // offset for width/height in IE 6/7
             x: 4,
             y: 2
         },
-        defaultContainer = document.getElementById('container'),
         eventTemplate = '<div class="singleDayCal-event"><article><header><h1>Sample Item</h1><p>Sample Location</p></header><section></section></article></div>';
 
-
-    //get live style of elm 
-
-    function getComputedStyle(elm) {
-        return window.getComputedStyle ? window.getComputedStyle(elm) : elm.currentStyle;
-    }
 
     //varify numeric input
 
@@ -106,7 +100,7 @@ var SingleDayCal = (function(exports) {
                 //find last added group
                 group = groups[0];
 
-                group.events.forEach(function(groupEvent, j){
+                group.events.forEach(function(groupEvent, j) {
                     groupEvent = group.events[j];
 
                     if (collidingEvents(groupEvent, event)) {
@@ -120,7 +114,7 @@ var SingleDayCal = (function(exports) {
                     }
 
                 })
-                
+
                 if (collideCount === 1) {
                     //no collding happens, create a new group
                     group = {
@@ -145,7 +139,6 @@ var SingleDayCal = (function(exports) {
 
     function renderEvents(reversedGroups, container) {
         var containerComputedCss,
-            totalWidth,
             containerPaddingLeft,
             groupsLen = 0,
             i = 0,
@@ -153,30 +146,26 @@ var SingleDayCal = (function(exports) {
             elmDay = document.createElement('div');
 
         elmDay.className = 'singleDayCal-day';
-        container.appendChild(elmDay);
-
-        containerComputedCss = getComputedStyle(elmDay);
-        totalWidth = parseInt(containerComputedCss.width) || 0;
-        containerPaddingLeft = parseInt(containerComputedCss.paddingLeft) || 0;
-
         reversedGroups = !Array.isArray(reversedGroups) ? [] : reversedGroups;
         groupsLen = reversedGroups.length;
 
         for (i = groupsLen - 1; i >= 0; i--) {
-            elmDay.appendChild(createGroupElement(reversedGroups[i], totalWidth, containerPaddingLeft));
+            elmDay.appendChild(createGroupElement(reversedGroups[i], maxWidth));
         }
+
+        container.appendChild(elmDay);
 
         return elmDay;
     }
 
     //create and return a html domcument fragment holding group elements
 
-    function createGroupElement(group, totalWidth, containerPaddingLeft) {
+    function createGroupElement(group, totalWidth) {
 
         var eventWidth = Math.round(totalWidth / group.maxCollidingCount),
             eventStacks = new Array(group.maxCollidingCount),
-            groupElm = document.createDocumentFragment(),            
-            colIndex = 0;            
+            groupElm = document.createDocumentFragment(),
+            colIndex = 0;
 
         group.events.forEach(function(event, i) {
             var j,
@@ -192,7 +181,7 @@ var SingleDayCal = (function(exports) {
 
                     if (!collidingEvents(eventStacks[j], event)) {
                         eventStacks[j] = event;
-                        left = containerPaddingLeft + j * eventWidth;
+                        left = j * eventWidth;
                         break;
                     }
 
@@ -200,7 +189,7 @@ var SingleDayCal = (function(exports) {
 
             } else {
                 eventStacks[colIndex] = event;
-                left = containerPaddingLeft + colIndex * eventWidth;
+                left = colIndex * eventWidth;
             }
 
             groupElm.appendChild(createEventElement(event, eventWidth, left));
@@ -273,12 +262,12 @@ var SingleDayCal = (function(exports) {
             throw new Error('SingleDayCal(): argument \'events\' must be an array.')
         }
 
-        if (container && !container.tagName) {
+        if (!container || !container.tagName) {
             throw new Error('SingleDayCal(): argument \'container\' must be a html dom element.')
         }
 
         this._events = events;
-        this._container = container || defaultContainer;
+        this._container = container;
 
     };
 
