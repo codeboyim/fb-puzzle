@@ -115,7 +115,6 @@
 
         render:function(){
             var totalWidth = 600,
-                paddingLeft = 10,            
                 groups = this.props.groups ||[],
                 groupsLen = groups.length,
                 eventBlocks = []; //<EventBlock width:, left:, event:/>
@@ -136,15 +135,15 @@
 
                                 if (!collidingEvents(eventStacks[j], event)) {
                                     eventStacks[j] = event;
-                                    eventProps.left = (paddingLeft + j * eventWidth);
+                                    eventProps.left = j * eventWidth;
                                     break;
                                 }
-
+                                
                             }
 
                         } else {
                             eventStacks[colIndex] = event;
-                            eventProps.left = paddingLeft + colIndex * eventWidth;
+                            eventProps.left =  colIndex * eventWidth;
                         }
 
                         eventBlocks.push(eventProps);
