@@ -156,7 +156,7 @@ var SingleDayCal = (function(exports) {
 
     //render all grouped events
 
-    function renderEvents(events, attachToElm) {
+    function renderEvents(events, parentElm) {
         var elmDay = document.createElement('div'),
             groups = sortAndGroupEvents(events);
 
@@ -196,14 +196,14 @@ var SingleDayCal = (function(exports) {
 
         });
 
-        attachToElm.appendChild(elmDay);
+        parentElm.appendChild(elmDay);
         
         return elmDay;
     }
 
     //display times - axis y
 
-    function renderTimeIntervals(attachToElm) {
+    function renderTimeIntervals(parentElm) {
         var elmTimeTicks = document.createElement('ul'),
             ticksCount = Math.ceil((endHour - startHour) * 60 / timeInterval) + 1,
             i,
@@ -230,7 +230,7 @@ var SingleDayCal = (function(exports) {
         }
 
         elmTimeTicks.innerHTML = tickHtml;
-        attachToElm.appendChild(elmTimeTicks);
+        parentElm.appendChild(elmTimeTicks);
 
         return elmTimeTicks;
     }
