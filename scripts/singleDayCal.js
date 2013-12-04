@@ -67,7 +67,7 @@ var SingleDayCal = (function(exports) {
     }
 
     //sort events by starting time and group colliding events and
-    //return reversed groups with latest inserted group in the most front.
+    //return groups with latest inserted group in the front.
 
     function sortAndGroupEvents(events) {
         var groups = [];
@@ -86,11 +86,11 @@ var SingleDayCal = (function(exports) {
             rectifyEvent(event);
 
             if (i === 0) {
-                //init a group
+                //create a new group
                 group = {
                     //store all the indexes of colliding events
                     events: [event],
-                    //store the max number of colliding events of the group. default to 1 if no other event in the same group
+                    //store the max number of colliding events of the group. default to 1
                     maxCollidingCount: 1
                 };
 
@@ -100,8 +100,7 @@ var SingleDayCal = (function(exports) {
                 //find last added group
                 group = groups[0];
 
-                group.events.forEach(function(groupEvent, j) {
-                    groupEvent = group.events[j];
+                group.events.forEach(function(groupEvent) {
 
                     if (collidingEvents(groupEvent, event)) {
 
@@ -135,70 +134,6 @@ var SingleDayCal = (function(exports) {
         return groups;
     }
 
-    //render and return a 'day' wrapper including all group elements. 
-
-    function renderEvents(reversedGroups, container) {
-        var containerComputedCss,
-            containerPaddingLeft,
-            groupsLen = 0,
-            i = 0,
-            groupWrapper,
-            elmDay = document.createElement('div');
-
-        elmDay.className = 'singleDayCal-day';
-        reversedGroups = !Array.isArray(reversedGroups) ? [] : reversedGroups;
-        groupsLen = reversedGroups.length;
-
-        for (i = groupsLen - 1; i >= 0; i--) {
-            elmDay.appendChild(createGroupElement(reversedGroups[i], maxWidth));
-        }
-
-        container.appendChild(elmDay);
-
-        return elmDay;
-    }
-
-    //create and return a html domcument fragment holding group elements
-
-    function createGroupElement(group, totalWidth) {
-
-        var eventWidth = Math.round(totalWidth / group.maxCollidingCount),
-            eventStacks = new Array(group.maxCollidingCount),
-            groupElm = document.createDocumentFragment(),
-            colIndex = 0;
-
-        group.events.forEach(function(event, i) {
-            var j,
-                left;
-
-            colIndex = i % (group.maxCollidingCount);
-
-            if (eventStacks[colIndex] && collidingEvents(eventStacks[colIndex], event)) {
-                //only to seek another stack when current stack doesn't fit
-                //events scatter better and there are less loops.
-
-                for (j = 0; j < group.maxCollidingCount; j++) {
-
-                    if (!collidingEvents(eventStacks[j], event)) {
-                        eventStacks[j] = event;
-                        left = j * eventWidth;
-                        break;
-                    }
-
-                }
-
-            } else {
-                eventStacks[colIndex] = event;
-                left = colIndex * eventWidth;
-            }
-
-            groupElm.appendChild(createEventElement(event, eventWidth, left));
-
-        });
-
-        return groupElm;
-    }
-
     //create and return a html dom element for 'event' object
 
     function createEventElement(event, width, left) {
@@ -217,6 +152,55 @@ var SingleDayCal = (function(exports) {
         eventElm.firstChild.style.height = height > 0 ? (height + 'px') : 0;
 
         return eventElm;
+    }
+
+    //render all grouped events
+
+    function renderEvents(events, attachToElm) {
+        var elmDay = document.createElement('div'),
+            groups = sortAndGroupEvents(events);
+
+        elmDay.className = 'singleDayCal-day';
+
+        groups.forEach(function(group) {
+            var eventWidth = Math.round(maxWidth / group.maxCollidingCount),
+                eventStacks = new Array(group.maxCollidingCount),
+                groupElm = document.createDocumentFragment(),
+                colIndex = 0;
+
+            group.events.forEach(function(event, i) {
+                var j,
+                    left;
+
+                colIndex = i % (group.maxCollidingCount);
+
+                if (eventStacks[colIndex] && collidingEvents(eventStacks[colIndex], event)) {
+                    //only to seek another stack when current stack doesn't fit
+                    //events scatter better and there are less loops.
+
+                    for (j = 0; j < group.maxCollidingCount; j++) {
+
+                        if (!collidingEvents(eventStacks[j], event)) {
+                            eventStacks[j] = event;
+                            left = j * eventWidth;
+                            break;
+                        }
+
+                    }
+
+                } else {
+                    eventStacks[colIndex] = event;
+                    left = colIndex * eventWidth;
+                }
+
+                elmDay.appendChild(createEventElement(event, eventWidth, left));
+            });
+
+        });
+
+        attachToElm.appendChild(elmDay);
+        
+        return elmDay;
     }
 
     //display times - axis y
@@ -281,7 +265,7 @@ var SingleDayCal = (function(exports) {
             this._container.appendChild(wrapper);
 
             renderTimeIntervals(wrapper)
-            renderEvents(sortAndGroupEvents(this._events), wrapper);
+            renderEvents(this._events, wrapper);
 
             return this;
         }
